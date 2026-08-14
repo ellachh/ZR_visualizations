@@ -1,0 +1,1186 @@
+<!-- 
+go to directory with this file
+cd ~/Documents/GitHub/ZR_visualizations
+RUN:  python3 -m http.server 8000 
+open http://localhost:8000/round6viz.html
+hello
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZR Code Visualizer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      width: 100%;
+      height: 100%;
+      font-family: monospace;
+      background: #111;
+      color: white;
+      overflow: hidden;
+    }
+    #layout {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+    #code, #blueCode {
+      width: 30%;
+      padding: 20px;
+      max-height: 100vh;
+      overflow-y: auto;
+      background: #111;
+      border-right: 1px solid #444;
+    }
+    #blueCode {
+      border-left: 1px solid #444;
+      border-right: none;
+    }
+    #code pre, #blueCode pre {
+      margin: 0;
+      padding: 5px;
+      font-size: 12px;
+      opacity: 0.6;
+    }
+    #code .highlight, #blueCode .highlight {
+      background: #333;
+      color: #0f0;
+      opacity: 1.0;
+    }
+    #sim {
+      flex-grow: 1;
+      position: relative;
+      background: black;
+      display: flex;
+      flex-direction: column;
+    }
+    canvas {
+      flex-grow: 1;
+      display: block;
+    }
+    #controls {
+      padding: 10px;
+      background: #111;
+      text-align: center;
+      border-top: 1px solid #333;
+      margin-top: -40px;
+    }
+    #controls button {
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      padding: 5px 10px;
+      margin: 0 5px;
+    }
+    #batteryValue, #bonusCropDisplay {
+      position: absolute;
+      z-index: 10;
+      background: rgba(0,0,0,0.6);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: monospace;
+      display: none;
+    }
+    #batteryValue {
+      top: 10px;
+      right: 10px;
+      color: yellow;
+    }
+    #bonusCropDisplay {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameWinnerMessage" style="
+    position: absolute;
+    top: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    font-family: monospace;
+    color: #00ff99;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 14px;
+    border-radius: 10px;
+    display: none;
+    z-index: 20;
+    font-weight: bold;
+  ">
+  </div>
+  <div id="blueBonusMessage" style="
+    position: absolute;
+    top: 80px;
+    right: 180px;
+    transform: translateX(-50%);
+    font-size: 15px;
+    font-family: monospace;
+    color: #00ff99;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: none;
+    z-index: 20;
+  ">
+  </div>
+  <div id="redBonusMessage" style="
+    position: absolute;
+    top: 80px;
+    left: 400px;
+    transform: translateX(-50%);
+    font-size: 15px;
+    font-family: monospace;
+    color: #00ff99;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: none;
+    z-index: 20;
+  ">
+  </div>
+  <div id="redErrorMessage" style="
+    position: absolute;
+    top: 80px;
+    left: 400px;
+    transform: translateX(-50%);
+    font-size: 15px;
+    font-family: monospace;
+    color: #ff0000;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: none;
+    z-index: 20;
+  ">
+  </div>
+  <div id="blueErrorMessage" style="
+    position: absolute;
+    top: 80px;
+    right: 400px;
+    transform: translateX(-50%);
+    font-size: 15px;
+    font-family: monospace;
+    color: #ff0000;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: none;
+    z-index: 20;
+  ">
+  </div>
+  <div id="gameTimer" style="
+    position: absolute;
+    top: 10px;
+    right: 320px;
+    color: #fff;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 8px;
+    z-index: 20;
+    font-family: monospace;
+  ">
+    Time: 0s
+  </div>
+  <div id="scoreBoard" style="
+    position: absolute;
+    bottom: 50px;
+    left: 320px;
+    color: #fff;
+    font-size: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    z-index: 20;
+    font-family: monospace;
+  ">
+    Alliance 6 Score: 0 | Alliance 11 Score: 0
+  </div>
+  <div id="layout">
+    <div id="code">
+      <pre id="line1">1: void harvest_crop(int cropus, int plotus) {</pre>
+      <pre id="line2">2: &nbsp;&nbsp;game.PlantCrop(plotus, cropus);</pre>
+      <pre id="line3">3: &nbsp;&nbsp;for (int count = 0; count &lt; 2; count++) {</pre>
+      <pre id="line4">4: &nbsp;&nbsp;&nbsp;&nbsp;game.WaterCrop(plotus);</pre>
+      <pre id="line5">5: &nbsp;&nbsp;&nbsp;&nbsp;game.SetWait(waitus_timus[cropus]);</pre>
+      <pre id="line6">6: &nbsp;&nbsp;}</pre>
+      <pre id="line7">7: &nbsp;&nbsp;game.HarvestCrop(plotus);</pre>
+      <pre id="line8">8: }</pre>
+      <pre id="line9">9: void harvest_crop2(int cropus, int plotus) {</pre>
+      <pre id="line10">10: &nbsp;&nbsp;game.PlantCrop(plotus, cropus);</pre>
+      <pre id="line11">11: &nbsp;&nbsp;game.WaterCrop(plotus);</pre>
+      <pre id="line12">12: &nbsp;&nbsp;game.SetWait(waitus_timus[cropus]);</pre>
+      <pre id="line13">13: &nbsp;&nbsp;game.WaterCrop(plotus);</pre>
+      <pre id="line14">14: &nbsp;&nbsp;if (get_opponent_position(1)) {</pre>
+      <pre id="line15">15: &nbsp;&nbsp;&nbsp;&nbsp;game.SetWait(1);</pre>
+      <pre id="line16">16: &nbsp;&nbsp;}</pre>
+      <pre id="line17">17: &nbsp;&nbsp;game.MoveWatering();</pre>
+      <pre id="line18">18: &nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="line19">19: &nbsp;&nbsp;game.MovePlot(plotus);</pre>
+      <pre id="line20">20: &nbsp;&nbsp;game.HarvestCrop(plotus);</pre>
+      <pre id="line21">21: }</pre>
+      <pre id="line22">22: game.MovePlot(1);</pre>
+      <pre id="line23">23: for (int count2 = 0; count2 &lt; 2; count2++) {</pre>
+      <pre id="line24">24: &nbsp;&nbsp;for (int count = 0; count &lt; 2; count++) {</pre>
+      <pre id="line25">25: &nbsp;&nbsp;&nbsp;&nbsp;harvest_crop(4, 1);</pre>
+      <pre id="line26">26: &nbsp;&nbsp;}</pre>
+      <pre id="line27">27: &nbsp;&nbsp;harvest_crop2(4, 1);</pre>
+      <pre id="line28">28: }</pre>
+      <pre id="line29">29: for (int count3 = 0; count3 &lt; 3; count3++) {</pre>
+      <pre id="line30">30: &nbsp;&nbsp;harvest_crop(4, 1);</pre>
+      <pre id="line31">31: }</pre>
+      <pre id="line32">32: game.EndGame();</pre>
+    </div>
+
+    <div id="sim">
+      <div id="bonusCropDisplay"></div>
+      <div id="batteryValue"></div>
+      <canvas id="scene"></canvas>
+      <div id="controls">
+        <button onclick="playAnim()">Play</button>
+        <button onclick="pauseAnim()">Pause</button>
+        <button onclick="stepAnim()">Step</button>
+      </div>
+    </div>
+
+    <div id="blueCode">
+      <pre id="bline1">1: game.MovePlot(2);</pre>
+      <pre id="bline2">2: for (int count = 0; count &lt; 2; count++) {</pre>
+      <pre id="bline3">3: &nbsp;&nbsp;game.PlantCrop(2, 4);</pre>
+      <pre id="bline4">4: &nbsp;&nbsp;game.WaterCrop(2);</pre>
+      <pre id="bline5">5: &nbsp;&nbsp;game.SetWait(10);</pre>
+      <pre id="bline6">6: &nbsp;&nbsp;game.WaterCrop(2);</pre>
+      <pre id="bline7">7: &nbsp;&nbsp;game.SetWait(10);</pre>
+      <pre id="bline8">8: &nbsp;&nbsp;game.HarvestCrop(2);</pre>
+      <pre id="bline9">9: }</pre>
+      <pre id="bline10">10: game.PlantCrop(2, 4);</pre>
+      <pre id="bline11">11: game.WaterCrop(2);</pre>
+      <pre id="bline12">12: game.SetWait(10);</pre>
+      <pre id="bline13">13: game.WaterCrop(2);</pre>
+      <pre id="bline14">14: at = game.OpponentAtWatering();</pre>
+      <pre id="bline15">15: going = game.OpponentGoingToWatering();</pre>
+      <pre id="bline16">16: water_zone_check = at || going;</pre>
+      <pre id="bline17">17: if (water_zone_check) {</pre>
+      <pre id="bline18">18: &nbsp;&nbsp;game.SetWait(4);</pre>
+      <pre id="bline19">19: &nbsp;&nbsp;if (team_color == 0) {</pre>
+      <pre id="bline20">20: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, 0.1);</pre>
+      <pre id="bline21">21: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline22">22: &nbsp;&nbsp;} else {</pre>
+      <pre id="bline23">23: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, -0.1);</pre>
+      <pre id="bline24">24: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline25">25: &nbsp;&nbsp;}</pre>
+      <pre id="bline26">26: &nbsp;&nbsp;water_units = game.GetWaterUnits();</pre>
+      <pre id="bline27">27: &nbsp;&nbsp;if (water_units == 0) {</pre>
+      <pre id="bline28">28: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveWatering();</pre>
+      <pre id="bline29">29: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline30">30: &nbsp;&nbsp;}</pre>
+      <pre id="bline31">31: } else {</pre>
+      <pre id="bline32">32: &nbsp;&nbsp;if (team_color == 0) {</pre>
+      <pre id="bline33">33: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, 0.1);</pre>
+      <pre id="bline34">34: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline35">35: &nbsp;&nbsp;} else {</pre>
+      <pre id="bline36">36: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, -0.1);</pre>
+      <pre id="bline37">37: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline38">38: &nbsp;&nbsp;}</pre>
+      <pre id="bline39">39: &nbsp;&nbsp;water_units = game.GetWaterUnits();</pre>
+      <pre id="bline40">40: &nbsp;&nbsp;if (water_units == 0) {</pre>
+      <pre id="bline41">41: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveWatering();</pre>
+      <pre id="bline42">42: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline43">43: &nbsp;&nbsp;}</pre>
+      <pre id="bline44">44: }</pre>
+      <pre id="bline45">45: game.MovePlot(2);</pre>
+      <pre id="bline46">46: game.HarvestCrop(2);</pre>
+      <pre id="bline47">47: for (int count2 = 0; count2 &lt; 2; count2++) {</pre>
+      <pre id="bline48">48: &nbsp;&nbsp;game.PlantCrop(2, 4);</pre>
+      <pre id="bline49">49: &nbsp;&nbsp;game.WaterCrop(2);</pre>
+      <pre id="bline50">50: &nbsp;&nbsp;game.SetWait(10);</pre>
+      <pre id="bline51">51: &nbsp;&nbsp;game.WaterCrop(2);</pre>
+      <pre id="bline52">52: &nbsp;&nbsp;game.SetWait(10);</pre>
+      <pre id="bline53">53: &nbsp;&nbsp;game.HarvestCrop(2);</pre>
+      <pre id="bline54">54: }</pre>
+      <pre id="bline55">55: game.PlantCrop(2, 4);</pre>
+      <pre id="bline56">56: game.WaterCrop(2);</pre>
+      <pre id="bline57">57: game.SetWait(10);</pre>
+      <pre id="bline58">58: game.WaterCrop(2);</pre>
+      <pre id="bline59">59: at = game.OpponentAtWatering();</pre>
+      <pre id="bline60">60: going = game.OpponentGoingToWatering();</pre>
+      <pre id="bline61">61: water_zone_check = at || going;</pre>
+      <pre id="bline62">62: if (water_zone_check) {</pre>
+      <pre id="bline63">63: &nbsp;&nbsp;game.SetWait(4);</pre>
+      <pre id="bline64">64: &nbsp;&nbsp;if (team_color == 0) {</pre>
+      <pre id="bline65">65: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, 0.1);</pre>
+      <pre id="bline66">66: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline67">67: &nbsp;&nbsp;} else {</pre>
+      <pre id="bline68">68: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, -0.1);</pre>
+      <pre id="bline69">69: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline70">70: &nbsp;&nbsp;}</pre>
+      <pre id="bline71">71: &nbsp;&nbsp;water_units = game.GetWaterUnits();</pre>
+      <pre id="bline72">72: &nbsp;&nbsp;if (water_units == 0) {</pre>
+      <pre id="bline73">73: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveWatering();</pre>
+      <pre id="bline74">74: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline75">75: &nbsp;&nbsp;}</pre>
+      <pre id="bline76">76: } else {</pre>
+      <pre id="bline77">77: &nbsp;&nbsp;if (team_color == 0) {</pre>
+      <pre id="bline78">78: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, 0.1);</pre>
+      <pre id="bline79">79: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline80">80: &nbsp;&nbsp;} else {</pre>
+      <pre id="bline81">81: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveToVoid(0, 0, -0.1);</pre>
+      <pre id="bline82">82: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline83">83: &nbsp;&nbsp;}</pre>
+      <pre id="bline84">84: &nbsp;&nbsp;water_units = game.GetWaterUnits();</pre>
+      <pre id="bline85">85: &nbsp;&nbsp;if (water_units == 0) {</pre>
+      <pre id="bline86">86: &nbsp;&nbsp;&nbsp;&nbsp;game.MoveWatering();</pre>
+      <pre id="bline87">87: &nbsp;&nbsp;&nbsp;&nbsp;game.FillWateringCan();</pre>
+      <pre id="bline88">88: &nbsp;&nbsp;}</pre>
+      <pre id="bline89">89: }</pre>
+      <pre id="bline90">90: game.MovePlot(2);</pre>
+      <pre id="bline91">91: game.HarvestCrop(2);</pre>
+      <pre id="bline92">92: for (int count3 = 0; count3 &lt; 3; count3++) {</pre>
+      <pre id="bline93">93: &nbsp;&nbsp;game.PlantCrop(2, 4);</pre>
+      <pre id="bline94">94: &nbsp;&nbsp;game.WaterCrop(2);</pre>
+      <pre id="bline95">95: &nbsp;&nbsp;game.SetWait(10);</pre>
+      <pre id="bline96">96: &nbsp;&nbsp;game.WaterCrop(2);</pre>
+      <pre id="bline97">97: &nbsp;&nbsp;game.SetWait(10);</pre>
+      <pre id="bline98">98: &nbsp;&nbsp;game.HarvestCrop(2);</pre>
+      <pre id="bline99">99: }</pre>
+      <pre id="bline100">100: game.EndGame();</pre>
+    </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <script>
+    const plotPositions = {
+      redHome: [0.0, 0.0, 0.3],
+      blueHome: [0.0, 0.0, -0.3],
+      wateringZone: [0.0, 0.0, 0.0],
+      astronaut: [0.0, 1.5, 0.0],
+
+      // Red robot plots
+      redPlot1: [-0.35, 0.6, 0.5],
+      redPlot2: [0.35, 0.6, 0.5],
+      redPlot3: [0.0, 1.0, 0.5],
+
+      // Blue robot plots
+      bluePlot1: [-0.35, 0.6, -0.5],
+      bluePlot2: [0.35, 0.6, -0.5],
+      bluePlot3: [0.0, 1.0, -0.5]
+    };
+    // PICK BONUS CROP
+    let bonusCrop = 4;
+    const redSteps = [
+      {line:22,target:plotPositions.redPlot1,time:0},
+      {line:23,time:9},
+      {line:24,time:10},
+      {line:25,time:11},
+      {line:1,time:12},
+      {line:2,action:'plant',plot:1,time:13},
+      {line:3,time:14},
+      {line:4,action:'water',plot:1,time:15},
+      {line:5,time:16},
+      {line:3,time:22},
+      {line:4,action:'water',plot:1,time:23},
+      {line:5,time:24},
+      {line:7,action:'harvest',plot:1,crop:4,time:33},
+      {line:24,time:34},
+      {line:25,time:35},
+      {line:1,time:36},
+      {line:2,action:'plant',plot:1,time:37},
+      {line:3,time:38},
+      {line:4,action:'water',plot:1,time:39},
+      {line:5,time:40},
+      {line:3,time:41},
+      {line:4,action:'water',plot:1,time:43},
+      {line:5,time:44},
+      {line:7,action:'harvest',plot:1,crop:4,time:53},
+      {line:26,time:54},
+      {line:27,time:55},
+      {line:9,time:56},
+      {line:10,action:'plant',plot:1,time:57},
+      {line:11,action:'water',plot:1,time:58},
+      {line:12,time:59},
+      {line:13,action:'water',plot:1,time:63},
+      {line:17,target:plotPositions.wateringZone,time:64},
+      {line:18,action:'fill',time:82},
+      {line:19,target:plotPositions.redPlot1,time:83},
+      {line:20,action:'harvest',plot:1,crop:4,time:94},
+      {line:23,time:95},
+      {line:25,time:96},
+      {line:1,time:97},
+      {line:2,action:'plant',plot:1,time:98},
+      {line:4,action:'water',plot:1,time:99},
+      {line:5,time:100},
+      {line:3,time:103},
+      {line:4,action:'water',plot:1,time:104},
+      {line:5,time:105},
+      {line:7,action:'harvest',plot:1,crop:4,time:114},
+      {line:24,time:115},
+      {line:25,time:116},
+      {line:1,time:117},
+      {line:2,action:'plant',plot:1,time:118},
+      {line:4,action:'water',plot:1,time:119},
+      {line:5,time:120},
+      {line:3,time:123},
+      {line:4,action:'water',plot:1,time:124},
+      {line:5,time:125},
+      {line:7,action:'harvest',plot:1,crop:4,time:134},
+      {line:26,time:135},
+      {line:27,time:136},
+      {line:9,time:137},
+      {line:10,action:'plant',plot:1,time:138},
+      {line:11,action:'water',plot:1,time:139},
+      {line:12,time:140},
+      {line:13,action:'water',plot:1,time:144},
+      {line:17,target:plotPositions.wateringZone,time:145},
+      {line:18,action:'fill',time:162},
+      {line:19,target:plotPositions.redPlot1,time:163},
+      {line:20,action:'harvest',plot:1,crop:4,time:175},
+      {line:29,time:176},
+      {line:30,time:177},
+      {line:1,time:178},
+      {line:2,action:'plant',plot:1,time:179},
+      {line:4,action:'water',plot:1,time:180},
+      {line:5,time:181},
+      {line:3,time:184},
+      {line:4,action:'water',plot:1,time:185},
+      {line:5,time:186},
+      {line:7,action:'harvest',plot:1,crop:4,time:195},
+      {line:29,time:196},
+      {line:30,time:197},
+      {line:1,time:198},
+      {line:2,action:'plant',plot:1,time:199},
+      {line:4,action:'water',plot:1,time:200},
+      {line:5,time:201},
+      {line:3,time:204},
+      {line:4,action:'water',plot:1,time:205},
+      {line:5,time:206},
+      {line:7,action:'harvest',plot:1,crop:4,time:215},
+      {line:29,time:216},
+      {line:30,time:217},
+      {line:1,time:218},
+      {line:2,action:'plant',plot:1,time:219},
+      {line:4,action:'water',plot:1,time:220},
+      {line:5,time:221},
+      {line:3,time:224},
+      {line:4,action:'water',plot:1,time:225},
+      {line:5,time:226},
+      {line:7,action:'harvest',plot:1,crop:4,time:235},
+      {line:32,time:236}
+    ];
+
+    const blueSteps = [
+      {line:1,target:plotPositions.bluePlot2,time:0},
+      {line:2,time:16},
+      {line:3,action:'plant',plot:2,time:17},
+      {line:4,action:'water',plot:2,time:18},
+      {line:5,time:19},
+      {line:6,action:'water',plot:2,time:27},
+      {line:7,time:28},
+      {line:8,action:'harvest',plot:2,crop:4,time:37},
+      {line:2,time:38},
+      {line:3,action:'plant',plot:2,time:39},
+      {line:4,action:'water',plot:2,time:40},
+      {line:5,time:41},
+      {line:6,action:'water',plot:2,time:47},
+      {line:7,time:48},
+      {line:8,action:'harvest',plot:2,crop:4,time:57},
+      {line:9,time:58},
+      {line:10,action:'plant',plot:2,time:59},
+      {line:11,action:'water',plot:2,time:60},
+      {line:12,time:61},
+      {line:13,action:'water',plot:2,time:67},
+      {line:17,time:68},
+      {line:18,time:69},
+      {line:19,time:73},
+      {line:20,target:plotPositions.wateringZone,time:74},
+      {line:21,action:'fill',time:88},
+      {line:45,target:plotPositions.bluePlot2,time:89},
+      {line:46,action:'harvest',plot:2,crop:4,time:105},
+      {line:47,time:106},
+      {line:48,action:'plant',plot:2,time:107},
+      {line:49,action:'water',plot:2,time:108},
+      {line:50,time:109},
+      {line:51,action:'water',plot:2,time:115},
+      {line:52,time:116},
+      {line:53,action:'harvest',plot:2,crop:4,time:125},
+      {line:48,action:'plant',plot:2,time:126},
+      {line:49,action:'water',plot:2,time:127},
+      {line:50,time:128},
+      {line:51,action:'water',plot:2,time:135},
+      {line:52,time:136},
+      {line:53,action:'harvest',plot:2,crop:4,time:145},
+      {line:55,action:'plant',plot:2,time:146},
+      {line:56,action:'water',plot:2,time:147},
+      {line:57,time:148},
+      {line:58,action:'water',plot:2,time:155},
+      {line:62,time:156},
+      {line:63,time:157},
+      {line:64,time:161},
+      {line:65,target:plotPositions.wateringZone,time:162},
+      {line:66,action:'fill',time:175},
+      {line:90,target:plotPositions.bluePlot2,time:176},
+      {line:91,action:'harvest',plot:2,crop:4,time:191},
+      {line:92,time:192},
+      {line:93,action:'plant',plot:2,time:193},
+      {line:94,action:'water',plot:2,time:194},
+      {line:95,time:195},
+      {line:96,action:'water',plot:2,time:201},
+      {line:97,time:202},
+      {line:98,action:'harvest',plot:2,crop:4,time:211},
+      {line:92,time:212},
+      {line:93,action:'plant',plot:2,time:213},
+      {line:94,action:'water',plot:2,time:214},
+      {line:95,time:215},
+      {line:96,action:'water',plot:2,time:221},
+      {line:97,time:222},
+      {line:98,action:'harvest',plot:2,crop:4,time:231},
+      {line:92,time:232},
+      {line:93,action:'plant',plot:2,time:233},
+      {line:94,action:'water',plot:2,time:234},
+      {line:95,time:235},
+      {line:96,action:'water',plot:2,time:241},
+      {line:97,time:242},
+      {line:98,action:'harvest',plot:2,crop:4,time:251},
+      {line:100,time:252}
+    ];
+    
+  
+    const cropMap = {
+          1: 'Tomato 🍅',
+          2: 'Cabbage 🥬',
+          3: 'Strawberry 🍓',
+          4: 'Melon 🍈'
+        };  
+    let currentStep = 0;
+    let playing = false;
+    let timer = null;
+    let moveSpeed = 0.02;
+    let redMoving = false;
+    let redTarget = null;
+    let redWaitCounter = 0;
+    let blueMoving = false;
+    let blueTarget = null;
+    let blueStepIndex = 0;
+    let blueWaitCounter = 0;
+    let elapsedTime = 0;
+    let timerInterval=null;
+
+    // scoring variables
+    let redScore = 0;
+    let blueScore = 0;
+    let redBonuses=0;
+    let blueBonuses=0;
+    let redUsedBonus = false;
+    let blueUsedBonus = false;
+
+    // time variables
+    let redSchedule = [];
+    let blueSchedule = [];
+    let redElapsed = 0;
+    let blueElapsed = 0;
+
+    function computeSchedules() {
+      redSchedule = redSteps.map(step => {
+        const scheduledTime = redElapsed;
+        redElapsed += step.duration || 1; // Assume 1s default if not specified
+        return { step, time: scheduledTime };
+      });
+
+      blueSchedule = blueSteps.map(step => {
+        const scheduledTime = blueElapsed;
+        blueElapsed += step.duration || 1;
+        return { step, time: scheduledTime };
+      });
+    }
+
+    function highlightLine(n) {
+      for (let i = 1; i <= 32; i++) {
+        document.getElementById('line' + i).classList.remove('highlight');
+      }
+      const lineElem = document.getElementById('line' + n);
+      if (lineElem) {
+        lineElem.classList.add('highlight');
+        const container = document.getElementById('code');
+        const offsetTop = lineElem.offsetTop - container.offsetTop;
+        container.scrollTo({
+          top: offsetTop - container.clientHeight / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+    
+    function highlightBlueLine(n) {
+      for (let i = 1; i <= 100; i++) {
+        document.getElementById('bline' + i).classList.remove('highlight');
+      }
+      const lineElem = document.getElementById('bline' + n);
+      if (lineElem) {
+        lineElem.classList.add('highlight');
+        const container = document.getElementById('blueCode');
+        const offsetTop = lineElem.offsetTop - container.offsetTop;
+        container.scrollTo({
+          top: offsetTop - container.clientHeight / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    function getPlotByNumber(robot, n) {
+      if (robot === 'red') {
+        return { 1: redPlot1, 2: redPlot2, 3: redPlot3 }[n];
+      } else if (robot === 'blue') {
+        return { 1: bluePlot1, 2: bluePlot2, 3: bluePlot3 }[n];
+      }
+    }
+    
+    function showBonusMessage(color,crop) {
+      let message = document.getElementById('blueBonusMessage');
+      if(color=='red'){
+        message = document.getElementById('redBonusMessage');
+      }
+      message.innerText = `${crop} Harvested!`
+      if(crop=='bonus'){
+        message.innerText = 'Bonus Crop Harvested✨ +4 points!'
+      }
+      message.style.display = 'block';
+      message.style.opacity = '1';
+
+      setTimeout(() => {
+        message.style.transition = 'opacity 0.5s';
+        message.style.opacity = '0';
+      }, 1500);
+      setTimeout(() => {
+        message.style.display = 'none';
+        message.style.transition = '';
+        message.style.opacity = '1';
+      }, 2000);
+    }
+    function showErrorMessage(error,duration=3000){
+      let message = document.getElementById('blueErrorMessage');
+      message.innerText="Error: " + error;
+      message.style.display = 'block'
+      message.style.opacity = '1';
+      setTimeout(() => {
+        message.style.display = "none";
+      }, 10000);
+    }
+    function showGameWinner(winner) {
+      const message = document.getElementById('gameWinnerMessage');
+      message.innerText = `${winner} wins ! 🎉`;
+      message.style.display = 'block';
+      message.style.opacity = '1';
+    }
+
+    function createLabel(text) {
+      const div = document.createElement('div');
+      div.className = 'label';
+      div.textContent = text;
+      div.style.marginTop = '-1em';
+      div.style.color = 'white';
+      div.style.fontSize = '12px';
+      div.style.background = 'rgba(0,0,0,0.6)';
+      div.style.padding = '2px 4px';
+      div.style.borderRadius = '4px';
+      return new THREE.CSS2DObject(div);
+    }
+    
+    function getCropWaitTime(cropId) {
+      const waitTimes = {
+        1: 6,  // Tomato
+        2: 8,  // Cabbage
+        3: 5,  // Strawberry
+        4: 10  // Melon
+      };
+      return waitTimes[cropId] || 6; // default to 6 if undefined
+    }
+
+    function getCropScore(id) {
+      const scores = { 1: 6, 2: 7, 3: 4, 4: 11 };
+      return scores[id] || 0;
+    }
+
+    function updateScoreDisplay() {
+      document.getElementById('scoreBoard').innerText = 
+        `Alliance 6: ${redScore} | Alliance 11: ${blueScore}`;
+    }
+
+    function performRedStep(step) {
+      highlightLine(step.line);
+      if (step.target) {
+        redTarget = new THREE.Vector3(...step.target);
+        redMoving = true;
+        return;
+      } else if (step.action === 'plant') {
+        const plot = getPlotByNumber('red', step.plot);
+        plot.material.color.set(0x00ff00);
+        plot.scale.set(1.5, 1.5, 1.5);
+        setTimeout(() => plot.scale.set(1, 1, 1), 500);
+        setTimeout(() => plot.material.color.set(0xff0000), 500);
+      } else if (step.action === 'water') {
+        const plot = getPlotByNumber('red',step.plot);
+        const pulse = () => {
+          plot.material.color.set(0x3b9ade);
+          plot.scale.set(1.5, 1.5, 1.5);
+          setTimeout(() => {
+            plot.scale.set(1, 1, 1);
+            plot.material.color.set(0xff0000);
+          }, 500);
+        };
+        pulse();
+      }
+       else if (step.action === 'battery') {
+        const val = (Math.random() * 100).toFixed(1);
+        const batteryDisplay = document.getElementById('batteryValue');
+        batteryDisplay.innerText = `Battery: ${val}%`;
+        batteryDisplay.style.display = 'block';
+        setTimeout(() => batteryDisplay.style.display = 'none', 2000);
+      }
+      else if (step.action =='fill'){
+        highlightRobot(redRobot,0x3b9ade);
+      }
+      else if (step.action=='bonus'){
+        const cropName = cropMap[bonusCrop];
+        const bonusDisplay = document.getElementById('bonusCropDisplay');
+        bonusDisplay.innerText = `Bonus Crop: ${cropName}`;
+        bonusDisplay.style.display = 'block';
+        setTimeout(() => (bonusDisplay.style.display = 'none'), 2000);
+        highlightRobot(redRobot,0xeceb4f)
+        redUsedBonus= true;
+      }
+      else if (step.action == 'harvest') {
+        const plot = getPlotByNumber('red',step.plot);
+        plot.material.color.set(0x389931); 
+        plot.scale.set(1.5, 1.5, 1.5);
+        setTimeout(() => plot.scale.set(1, 1, 1), 500);
+        setTimeout(() => plot.material.color.set(0xff0000), 500);
+
+        // Update score
+        console.log(bonusCrop)
+        console.log(step.crop==bonusCrop)
+        redScore += getCropScore(step.crop);
+        if (step.crop==bonusCrop&&redUsedBonus){
+          redBonuses++;
+          if(redBonuses<=3){
+            redScore+=4;
+            showBonusMessage('red','bonus');
+          }
+        }else{
+          showBonusMessage('red',cropMap[step.crop])
+        }
+        updateScoreDisplay();
+      }
+      else if (step.action=='wait'){
+        if (redWaitCounter == 0) {
+          redWaitCounter = step.duration || 1;  // default to 1 if duration not set
+        }
+      redWaitCounter--;
+      if (redWaitCounter > 0) {
+        currentStep--; // stay on this step for the next interval
+      } else {
+        redWaitCounter = 0; // reset after done
+      }
+      }
+      else if (step.action=='error'){
+        showErrorMessage(step.message);
+      }
+    }
+
+    function performBlueStep(step) {
+      highlightBlueLine(step.line);
+      if (step.target) {
+        blueTarget = new THREE.Vector3(...step.target);
+        blueMoving = true;
+        return;
+      } else if (step.action === 'bonus') {
+        const cropName = cropMap[bonusCrop];
+        const bonusDisplay = document.getElementById('bonusCropDisplay');
+        bonusDisplay.innerText = `Bonus Crop: ${cropName}`;
+        bonusDisplay.style.display = 'block';
+        setTimeout(() => (bonusDisplay.style.display = 'none'), 2000);
+        highlightRobot(blueRobot,0xeceb4f)
+        blueUsedBonus=true;
+      }else if (step.action =='fill'){
+        highlightRobot(blueRobot,0x3b9ade);
+      } else if (step.action === 'plant') {
+        const plot = getPlotByNumber('blue',step.plot);
+        plot.material.color.set(0x00ff00);
+        plot.scale.set(1.5, 1.5, 1.5);
+        setTimeout(() => plot.scale.set(1, 1, 1), 500);
+        setTimeout(() => plot.material.color.set(0x0000ff), 500);
+      } else if (step.action === 'water') {
+        const plot = getPlotByNumber('blue',step.plot);
+        plot.material.color.set(0x3b9ade);
+        plot.scale.set(1.5, 1.5, 1.5);
+        setTimeout(() => {
+          plot.scale.set(1, 1, 1);
+          plot.material.color.set(0x0000ff);
+        }, 500);
+      } else if (step.action === 'harvest') {
+        const plot = getPlotByNumber('blue',step.plot);
+        plot.material.color.set(0x389931);
+        plot.scale.set(1.5, 1.5, 1.5);
+        setTimeout(() => plot.scale.set(1, 1, 1), 500);
+        setTimeout(() => plot.material.color.set(0x0000ff), 500);
+        blueScore += getCropScore(step.crop);
+        if (step.crop==bonusCrop&&blueUsedBonus){
+          blueBonuses++;
+          if(blueBonuses<=3){
+            blueScore+=4;
+            showBonusMessage('blue','bonus');
+          }
+        }else{
+          showBonusMessage('blue',cropMap[step.crop]);
+        }
+        updateScoreDisplay();
+      } else if (step.action === 'wait') {
+        if (blueWaitCounter === 0) {
+          blueWaitCounter = typeof step.getWait === 'function' ? step.getWait() : 1;
+        }
+        blueWaitCounter--;
+        if (blueWaitCounter > 0) {
+          blueStepIndex--; // repeat step
+        } else {
+          blueWaitCounter = 0;
+        }
+      } else if (step.action=='error'){
+        showErrorMessage(step.message,'blue');
+      }
+    }
+    
+    function highlightRobot(robot,glowColor) {
+      // Create a glow ring
+      const glow = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 32, 32),
+        new THREE.MeshBasicMaterial({ color: glowColor, transparent: true, opacity: 0.3,
+      side: THREE.DoubleSide, })
+      );
+
+      glow.name = 'highlight-glow';
+
+      robot.add(glow);
+
+      setTimeout(() => {
+        const glowToRemove = robot.getObjectByName('highlight-glow');
+        if (glowToRemove) robot.remove(glowToRemove);
+      }, 400);
+    }
+
+    function stepAnim() {
+      if (currentStep >= redSteps.length || redMoving) return;
+      const rstep = redSteps[currentStep];
+      if (rstep.target) {
+        redTarget = new THREE.Vector3(...rstep.target);
+        redMoving = true;
+      } else {
+        // if not a movement step, apply the action immediately
+        performRedStep(step);
+        currentStep++;
+        setTimeout(stepAnim, 500);
+      }
+      if (currentStep >= blueSteps.length || blueMoving) return;
+      const bstep = blueSteps[blueStepIndex];
+      if (bstep.target) {
+        blueTarget = new THREE.Vector3(...bstep.target);
+        blueMoving = true;
+      } else {
+        // if not a movement step, apply the action immediately
+        performBlueStep(bstep);
+        blueStepIndex++;
+        setTimeout(stepAnim, 500);
+      }
+    }
+
+    function playAnim() {
+      if (playing) return;
+      playing = true;
+
+      // Start game timer
+      timerInterval = setInterval(() => {
+        elapsedTime++;
+        document.getElementById("gameTimer").innerText = `Time: ${elapsedTime}s`;
+      }, 1000);
+
+      timer = setInterval(() => {
+        // RED robot scheduled step
+        if (!redMoving && currentStep < redSteps.length) {
+          const nextRed = redSteps[currentStep];
+          if (elapsedTime >= nextRed.time) {
+            performRedStep(nextRed);
+            currentStep++;
+          }
+        }
+
+        // BLUE robot scheduled step
+        if (!blueMoving && blueStepIndex < blueSteps.length) {
+          const nextBlue = blueSteps[blueStepIndex];
+          if (elapsedTime >= nextBlue.time) {
+            performBlueStep(nextBlue);
+            blueStepIndex++;
+          }
+        }
+
+        if (elapsedTime >= 252) {
+          clearInterval(timer);
+          clearInterval(timerInterval);
+          playing = false;
+          redScore=107.374;
+          blueScore=107.443;
+          showGameWinner('Blue Team(Alliance 11)');
+          updateScoreDisplay();
+        }
+      }, 100); // check every 100ms for precise timing
+    }
+
+
+    function pauseAnim() {
+      clearInterval(timer);
+      clearInterval(timerInterval);
+      playing = false;
+    }
+
+    // THREE.js scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, (window.innerWidth / 2) / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene') });
+    renderer.setSize(window.innerWidth / 2, window.innerHeight);
+
+    const labelRenderer = new THREE.CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth / 2, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';  
+    document.getElementById('sim').appendChild(labelRenderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
+    controls.rotateSpeed = 0.3;
+    controls.zoomSpeed = 0.5;
+
+    const robotRadius = 0.05;
+    const robotGeo = new THREE.SphereGeometry(robotRadius, 32, 32);
+
+
+    // Load GLTF models for robots
+    const gltfLoader = new THREE.GLTFLoader();
+    let redRobot, blueRobot;
+
+    const scaleFactor = 0.5; // Adjust scale factor as needed
+    gltfLoader.load('honey.glb', (gltf) => {
+      redRobot = gltf.scene;
+      redRobot.scale.set(scaleFactor, scaleFactor, scaleFactor);  // Adjust as needed
+      redRobot.position.set(...plotPositions.redHome);
+      scene.add(redRobot);
+    });
+
+    gltfLoader.load('bumble2.glb', (gltf) => {
+      blueRobot = gltf.scene;
+      blueRobot.scale.set(scaleFactor, scaleFactor, scaleFactor);  // Adjust as needed
+      blueRobot.position.set(...plotPositions.blueHome);
+      scene.add(blueRobot);
+    });
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 2, 3);
+    scene.add(directionalLight);
+
+
+
+    // // Red robot
+    // const redRobotMat = new THREE.MeshBasicMaterial({ color: 0xff4444 }); 
+    // const redRobot = new THREE.Mesh(robotGeo.clone(), redRobotMat);
+    // redRobot.position.set(...plotPositions.redHome);
+    // scene.add(redRobot);
+
+    // // Blue robot
+    // const blueRobotMat = new THREE.MeshBasicMaterial({ color: 0x4444ff }); 
+    // const blueRobot = new THREE.Mesh(robotGeo.clone(), blueRobotMat);
+    // blueRobot.position.set(...plotPositions.blueHome);
+    // scene.add(blueRobot);
+
+    const redPlotGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const redPlotMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.4 });
+
+    const redPlot1 = new THREE.Mesh(redPlotGeo, redPlotMat.clone());
+    redPlot1.position.set(...plotPositions.redPlot1);
+    scene.add(redPlot1);
+
+    const redPlot2 = new THREE.Mesh(redPlotGeo, redPlotMat.clone());
+    redPlot2.position.set(...plotPositions.redPlot2);
+    scene.add(redPlot2);
+
+    const redPlot3 = new THREE.Mesh(redPlotGeo, redPlotMat.clone());
+    redPlot3.position.set(...plotPositions.redPlot3);
+    scene.add(redPlot3);
+
+    redPlot1.add(createLabel("Red Plot 1"));
+    redPlot2.add(createLabel("Red Plot 2"));
+    redPlot3.add(createLabel("Red Plot 3"));
+
+    const bluePlotMat = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.4 });
+
+    const bluePlot1 = new THREE.Mesh(redPlotGeo.clone(), bluePlotMat.clone());
+    bluePlot1.position.set(...plotPositions.bluePlot1);
+    scene.add(bluePlot1);
+
+    const bluePlot2 = new THREE.Mesh(redPlotGeo.clone(), bluePlotMat.clone());
+    bluePlot2.position.set(...plotPositions.bluePlot2);
+    scene.add(bluePlot2);
+
+    const bluePlot3 = new THREE.Mesh(redPlotGeo.clone(), bluePlotMat.clone());
+    bluePlot3.position.set(...plotPositions.bluePlot3);
+    scene.add(bluePlot3);
+    bluePlot1.add(createLabel("Blue Plot 1"));
+    bluePlot2.add(createLabel("Blue Plot 2"));
+    bluePlot3.add(createLabel("Blue Plot 3"));
+
+    
+    //watering zone
+    const waterZoneGeo = new THREE.CircleGeometry(0.1, 32);
+    const waterZoneMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.5 });
+    const waterZone = new THREE.Mesh(waterZoneGeo, waterZoneMat);
+    waterZone.position.set(...plotPositions.wateringZone);
+    waterZone.rotation.x = -Math.PI / 2;
+    scene.add(waterZone);
+    const waterLabel = createLabel("Watering Zone");
+    waterLabel.position.set(0, 0.1, 0);
+    waterZone.add(waterLabel);
+
+
+    //astronaut zone
+    const astronautGeo = new THREE.CircleGeometry(0.1, 32);
+    const astronautMat = new THREE.MeshBasicMaterial({ color: 0x389931, transparent: true, opacity: 0.5 });
+    const astronautZone = new THREE.Mesh(astronautGeo, astronautMat);
+    astronautZone.position.set(...plotPositions.astronaut);
+    astronautZone.rotation.x = -Math.PI / 2;
+    scene.add(astronautZone);
+    const astronautLabel = createLabel("Astronaut Zone");
+    astronautLabel.position.set(0, 0.1, 0);
+    astronautZone.add(astronautLabel);
+
+    //red and blue home
+    const homeGeo = new THREE.CircleGeometry(0.1, 32);
+    const redHomeMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 });
+    const redHomeCircle = new THREE.Mesh(homeGeo.clone(), redHomeMat);
+    redHomeCircle.position.set(...plotPositions.redHome);
+    redHomeCircle.rotation.x = -Math.PI / 2;  // lie flat
+    scene.add(redHomeCircle);
+    const redHomeLabel = createLabel("Red Home");
+    redHomeLabel.position.set(0, 0.1, 0);
+    redHomeCircle.add(redHomeLabel);
+
+    const blueHomeMat = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 });
+    const blueHomeCircle = new THREE.Mesh(homeGeo.clone(), blueHomeMat);
+    blueHomeCircle.position.set(...plotPositions.blueHome);
+    blueHomeCircle.rotation.x = -Math.PI / 2;
+    scene.add(blueHomeCircle);
+    const blueHomeLabel = createLabel("Blue Home");
+    blueHomeLabel.position.set(0, 0.1, 0);
+    blueHomeCircle.add(blueHomeLabel);
+
+    const floor = new THREE.GridHelper(2, 10);
+    scene.add(floor);
+
+    camera.position.set(1.5, 1.5, 1.5);
+    camera.lookAt(0, 0.5, 0);
+
+    let redVelocity = new THREE.Vector3();
+    let blueVelocity = new THREE.Vector3();
+    const redWobblePhase = Math.random() * Math.PI * 2;
+    const blueWobblePhase = Math.random() * Math.PI * 2;
+
+
+    // Spring-damper model with wobble
+    const k = 0.001; // spring stiffness
+    const c = 0.13; // damping (resistance)
+
+    function applyPhysics(robot, target, velocity,phase) {
+      if (!target) return false;
+
+      const displacement = target.clone().sub(robot.position);
+      const distance = displacement.length();
+
+      if (distance < 0.02 && velocity.length() < 0.08) {
+        robot.position.copy(target);
+        velocity.set(0, 0, 0);
+        return false;
+      }
+
+      // Wobble when close to target
+      const time = performance.now() * 0.005;
+      const wobble = distance < 0.1
+        ? new THREE.Vector3(
+            Math.sin(time + phase) * 0.0003,
+            Math.cos(time * 1.2 + phase) * 0.0003,
+            Math.sin(time * 0.8 + phase) * 0.0003
+          )
+        : new THREE.Vector3(0, 0, 0);
+      const springForce = displacement.multiplyScalar(k);
+      const dampingForce = velocity.clone().multiplyScalar(-c);
+      const totalForce = springForce.add(dampingForce).add(wobble);
+
+      velocity.add(totalForce);
+      robot.position.add(velocity);
+
+      return true; // still moving
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        controls.update();
+
+        if (redMoving && redTarget) {
+          redMoving = applyPhysics(redRobot, redTarget, redVelocity, redWobblePhase);
+        }
+        if (blueMoving && blueTarget) {
+          blueMoving = applyPhysics(blueRobot, blueTarget, blueVelocity, blueWobblePhase);
+        }
+
+        renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
+    }
+
+
+    // function animate() {
+    //   requestAnimationFrame(animate);
+    //   controls.update();
+
+    //   if (redMoving && redTarget) {
+    //     redRobot.position.lerp(redTarget, moveSpeed);
+    //     if (redRobot.position.distanceTo(redTarget) < 0.01) {
+    //       redRobot.position.copy(redTarget);
+    //       redMoving = false;
+    //     }
+    //   }
+
+    //   if (blueMoving && blueTarget) {
+    //     blueRobot.position.lerp(blueTarget, moveSpeed);
+    //     if (blueRobot.position.distanceTo(blueTarget) < 0.01) {
+    //       blueRobot.position.copy(blueTarget);
+    //       blueMoving = false;
+    //     }
+    //   }
+
+    //   renderer.render(scene, camera);
+    //   labelRenderer.render(scene, camera);
+    // }
+    animate();
+
+    playAnim();
+  </script>
+</body>
+</html>

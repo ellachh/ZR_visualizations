@@ -1,0 +1,236 @@
+"Sphere 1, 0.0s, GT: Initializing Simulation, Galactic Garden
+Sphere 2, 0.0s, GT: Initializing Simulation, Galactic Garden
+Sphere 1, 0.0s, GT: Terminal Output
+Sphere 2, 0.0s, GT: Terminal Output
+Sphere 1, 0.0s, GT: ---------------
+Sphere 2, 0.0s, GT: ---------------
+Sphere 1, 0.0s, GT: Starting Home Position: (0.000000, 0.000000, 0.000000)
+Sphere 2, 0.0s, GT: Starting Home Position: (0.000000, 0.000000, 0.000000)
+Sphere 2, 0.0s, GT: Moving to plot 2: (0.35, 0.6, -0.50)
+Sphere 1, 1.0s, GT: Moving to plot 1: (-0.35, 0.6, 0.50)
+Sphere 2, 12.0s, GT: Moved To Position: (0.35, 0.60, -0.50)
+Sphere 2, 12.0s, GT: Planting crop of type 4 at plot 2.
+Sphere 1, 13.0s, GT: Moved To Position: (-0.35, 0.60, 0.50)
+Sphere 1, 13.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 1, 13.0s, GT: Watered crop at plot 1. Water units left: 5. Crop watered: 1 times
+Sphere 2, 13.0s, GT: Watered crop at plot 2. Water units left: 5. Crop watered: 1 times
+Sphere 1, 13.0s, GT: Waiting for 10 seconds...
+Sphere 2, 13.0s, GT: Waiting for 10 seconds...
+Sphere 1, 23.0s, GT: Wait complete.
+Sphere 2, 23.0s, GT: Wait complete.
+Sphere 1, 23.0s, GT: Watered crop at plot 1. Water units left: 4. Crop watered: 2 times
+Sphere 2, 23.0s, GT: Watered crop at plot 2. Water units left: 4. Crop watered: 2 times
+Sphere 1, 23.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 2, 23.0s, GT: Crop at plot 2 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 23.0s, GT: Current Water Units: 4
+Sphere 2, 23.0s, GT: Waiting for 10 seconds...
+Sphere 1, 23.0s, GT: Waiting for 10 seconds...
+Sphere 2, 33.0s, GT: Wait complete.
+Sphere 1, 33.0s, GT: Wait complete.
+Sphere 2, 33.0s, GT: Harvesting crop at plot 2: Melon (+11.0 points). Total score: 11.0
+Sphere 1, 33.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 11.0
+Sphere 2, 33.0s, GT: Planting crop of type 4 at plot 2.
+Sphere 1, 33.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 2, 33.0s, GT: Watered crop at plot 2. Water units left: 3. Crop watered: 1 times
+Sphere 1, 33.0s, GT: Watered crop at plot 1. Water units left: 3. Crop watered: 1 times
+Sphere 2, 33.0s, GT: Waiting for 10 seconds...
+Sphere 1, 33.0s, GT: Waiting for 10 seconds...
+Sphere 2, 43.0s, GT: Wait complete.
+Sphere 1, 43.0s, GT: Wait complete.
+Sphere 2, 43.0s, GT: Watered crop at plot 2. Water units left: 2. Crop watered: 2 times
+Sphere 1, 43.0s, GT: Watered crop at plot 1. Water units left: 2. Crop watered: 2 times
+Sphere 2, 43.0s, GT: Crop at plot 2 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 43.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 2, 43.0s, GT: Waiting for 10 seconds...
+Sphere 1, 43.0s, GT: Current Water Units: 2
+Sphere 1, 43.0s, GT: Waiting for 10 seconds...
+Sphere 2, 53.0s, GT: Wait complete.
+Sphere 2, 53.0s, GT: Harvesting crop at plot 2: Melon (+11.0 points). Total score: 22.0
+Sphere 1, 53.0s, GT: Wait complete.
+Sphere 2, 53.0s, GT: Planting crop of type 4 at plot 2.
+Sphere 1, 53.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 22.0
+Sphere 2, 53.0s, GT: Watered crop at plot 2. Water units left: 1. Crop watered: 1 times
+Sphere 1, 53.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 2, 53.0s, GT: Waiting for 10 seconds...
+Sphere 1, 53.0s, GT: Watered crop at plot 1. Water units left: 1. Crop watered: 1 times
+Sphere 1, 53.0s, GT: Waiting for 10 seconds...
+Sphere 2, 63.0s, DBG: Moving to watering station, 63
+Sphere 2, 63.0s, GT: Wait complete.
+Sphere 2, 63.0s, GT: Watered crop at plot 2. Water units left: 0. Crop watered: 2 times
+Sphere 1, 63.0s, GT: Wait complete.
+Sphere 2, 63.0s, GT: Crop at plot 2 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 63.0s, GT: Watered crop at plot 1. Water units left: 0. Crop watered: 2 times
+Sphere 2, 63.0s, GT: Current Time: 63.00
+Sphere 1, 63.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 2, 63.0s, GT: Opponent is NOT at the watering station (intent: 0).
+Sphere 1, 63.0s, GT: Current Water Units: 0
+Sphere 2, 63.0s, GT: Opponent is NOT going to the watering station (intent: 0).
+Sphere 1, 63.0s, GT: Opponent is NOT at the watering station (intent: 0).
+Sphere 2, 63.0s, GT: Generated new random draw number: 223
+Sphere 1, 63.0s, GT: Generated new random draw number: 622
+Sphere 2, 64.0s, DBG: Opponent At Watering
+Sphere 2, 64.0s, GT: Both robots going to watering station. Running random draw...
+Sphere 1, 64.0s, GT: Opponent not targeting watering. Proceeding.
+Sphere 2, 64.0s, GT: Lost draw. Not going to watering station.
+Sphere 2, 64.0s, GT: Error: Not at watering station. Cannot fill watering can.
+Sphere 2, 64.0s, GT: Current Robot location: (0.35,0.60,-0.50)
+Sphere 2, 64.0s, GT: Current Time: 64.00
+Sphere 2, 64.0s, GT: Waiting for 4 seconds...
+Sphere 2, 68.0s, GT: Wait complete.
+Sphere 2, 68.0s, GT: Moving to plot 2: (0.35, 0.6, -0.50)
+Sphere 2, 69.0s, DBG: Filled water, 6
+Sphere 2, 69.0s, GT: Moved To Position: (0.35, 0.60, -0.50)
+Sphere 2, 69.0s, GT: Current Time: 69.00
+Sphere 2, 69.0s, GT: Current Time: 69.00
+Sphere 2, 69.0s, GT: Waiting for 4 seconds...
+Sphere 2, 73.0s, GT: Wait complete.
+Sphere 2, 73.0s, GT: Harvesting crop at plot 2: Melon (+11.0 points). Total score: 33.0
+Sphere 2, 73.0s, GT: Planting crop of type 4 at plot 2.
+Sphere 2, 73.0s, GT: Error: No water units left.
+Sphere 2, 73.0s, GT: Waiting for 10 seconds...
+Sphere 1, 75.0s, GT: Moved To Position: (0.00, 0.00, 0.00)
+Sphere 1, 75.0s, GT: Filled watering can with 6 units.
+Sphere 1, 75.0s, GT: Moving to plot 1: (-0.35, 0.6, 0.50)
+Sphere 2, 83.0s, GT: Wait complete.
+Sphere 2, 83.0s, GT: Error: No water units left.
+Sphere 2, 83.0s, GT: Waiting for 10 seconds...
+Sphere 1, 90.0s, GT: Moved To Position: (-0.35, 0.60, 0.50)
+Sphere 1, 91.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 33.0
+Sphere 1, 91.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 1, 91.0s, GT: Watered crop at plot 1. Water units left: 5. Crop watered: 1 times
+Sphere 1, 91.0s, GT: Waiting for 10 seconds...
+Sphere 2, 93.0s, GT: Wait complete.
+Sphere 2, 93.0s, GT: Error: Crop at plot 2 is not ready for harvest, it is still growing.
+Sphere 2, 93.0s, GT: Error: Not at plot 2 or crop already planted at plot.
+Sphere 2, 93.0s, GT: Error: No water units left.
+Sphere 2, 93.0s, GT: Waiting for 10 seconds...
+Sphere 1, 101.0s, GT: Wait complete.
+Sphere 1, 101.0s, GT: Watered crop at plot 1. Water units left: 4. Crop watered: 2 times
+Sphere 1, 101.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 101.0s, GT: Current Water Units: 4
+Sphere 1, 101.0s, GT: Waiting for 10 seconds...
+Sphere 2, 103.0s, GT: Wait complete.
+Sphere 2, 103.0s, GT: Error: No water units left.
+Sphere 2, 103.0s, GT: Waiting for 10 seconds...
+Sphere 1, 111.0s, GT: Wait complete.
+Sphere 1, 111.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 44.0
+Sphere 1, 111.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 1, 111.0s, GT: Watered crop at plot 1. Water units left: 3. Crop watered: 1 times
+Sphere 1, 111.0s, GT: Waiting for 10 seconds...
+Sphere 2, 113.0s, GT: Wait complete.
+Sphere 2, 113.0s, GT: Error: Crop at plot 2 is not ready for harvest, it is still growing.
+Sphere 2, 113.0s, GT: Error: Not at plot 2 or crop already planted at plot.
+Sphere 2, 113.0s, GT: Error: No water units left.
+Sphere 2, 113.0s, GT: Waiting for 10 seconds...
+Sphere 1, 121.0s, GT: Wait complete.
+Sphere 1, 121.0s, GT: Watered crop at plot 1. Water units left: 2. Crop watered: 2 times
+Sphere 1, 121.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 121.0s, GT: Current Water Units: 2
+Sphere 1, 121.0s, GT: Waiting for 10 seconds...
+Sphere 2, 123.0s, DBG: Moving to watering station, 123
+Sphere 2, 123.0s, GT: Wait complete.
+Sphere 2, 123.0s, GT: Error: No water units left.
+Sphere 2, 123.0s, GT: Current Time: 123.00
+Sphere 2, 123.0s, GT: Opponent is NOT at the watering station (intent: 0).
+Sphere 2, 123.0s, GT: Opponent is NOT going to the watering station (intent: 0).
+Sphere 2, 123.0s, GT: Generated new random draw number: 759
+Sphere 2, 124.0s, GT: Opponent not targeting watering. Proceeding.
+Sphere 1, 131.0s, GT: Wait complete.
+Sphere 1, 131.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 55.0
+Sphere 1, 131.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 1, 131.0s, GT: Watered crop at plot 1. Water units left: 1. Crop watered: 1 times
+Sphere 1, 131.0s, GT: Waiting for 10 seconds...
+Sphere 2, 135.0s, GT: Moved To Position: (0.00, 0.00, 0.00)
+Sphere 2, 135.0s, GT: Filled watering can with 6 units.
+Sphere 2, 135.0s, GT: Current Robot location: (0.00,0.00,0.00)
+Sphere 2, 136.0s, DBG: Watering is free
+Sphere 2, 136.0s, GT: Current Robot location: (0.00,0.00,0.00)
+Sphere 2, 136.0s, GT: Current Time: 136.00
+Sphere 2, 136.0s, GT: Waiting for 0 seconds...
+Sphere 2, 136.0s, GT: Wait complete.
+Sphere 2, 136.0s, GT: Moving to plot 2: (0.35, 0.6, -0.50)
+Sphere 1, 141.0s, GT: Wait complete.
+Sphere 1, 141.0s, GT: Watered crop at plot 1. Water units left: 0. Crop watered: 2 times
+Sphere 1, 141.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 141.0s, GT: Current Water Units: 0
+Sphere 1, 141.0s, GT: Opponent is NOT at the watering station (intent: 0).
+Sphere 1, 141.0s, GT: Generated new random draw number: 703
+Sphere 1, 142.0s, GT: Opponent not targeting watering. Proceeding.
+Sphere 2, 146.0s, DBG: Filled water, 23
+Sphere 2, 146.0s, GT: Moved To Position: (0.35, 0.60, -0.50)
+Sphere 2, 146.0s, GT: Current Time: 146.00
+Sphere 2, 146.0s, GT: Current Time: 146.00
+Sphere 2, 146.0s, GT: Error: Crop at plot 2 is not ready for harvest, it is still growing.
+Sphere 2, 146.0s, GT: Error: Not at plot 2 or crop already planted at plot.
+Sphere 2, 146.0s, GT: Watered crop at plot 2. Water units left: 5. Crop watered: 1 times
+Sphere 2, 146.0s, GT: Waiting for 10 seconds...
+Sphere 1, 153.0s, GT: Moved To Position: (0.00, 0.00, 0.00)
+Sphere 1, 153.0s, GT: Filled watering can with 6 units.
+Sphere 1, 153.0s, GT: Moving to plot 1: (-0.35, 0.6, 0.50)
+Sphere 2, 156.0s, GT: Wait complete.
+Sphere 2, 156.0s, GT: Watered crop at plot 2. Water units left: 4. Crop watered: 2 times
+Sphere 2, 156.0s, GT: Crop at plot 2 is now growing. It can be harvested after 10 seconds.
+Sphere 2, 156.0s, GT: Waiting for 10 seconds...
+Sphere 2, 166.0s, GT: Wait complete.
+Sphere 2, 166.0s, GT: Harvesting crop at plot 2: Melon (+11.0 points). Total score: 44.0
+Sphere 2, 166.0s, GT: Planting crop of type 4 at plot 2.
+Sphere 2, 166.0s, GT: Watered crop at plot 2. Water units left: 3. Crop watered: 1 times
+Sphere 2, 166.0s, GT: Waiting for 10 seconds...
+Sphere 1, 169.0s, GT: Moved To Position: (-0.35, 0.60, 0.50)
+Sphere 1, 169.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 66.0
+Sphere 1, 169.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 1, 169.0s, GT: Watered crop at plot 1. Water units left: 5. Crop watered: 1 times
+Sphere 1, 169.0s, GT: Waiting for 10 seconds...
+Sphere 2, 176.0s, GT: Wait complete.
+Sphere 2, 176.0s, GT: Watered crop at plot 2. Water units left: 2. Crop watered: 2 times
+Sphere 2, 176.0s, GT: Crop at plot 2 is now growing. It can be harvested after 10 seconds.
+Sphere 2, 176.0s, GT: Waiting for 10 seconds...
+Sphere 1, 179.0s, GT: Wait complete.
+Sphere 1, 179.0s, GT: Watered crop at plot 1. Water units left: 4. Crop watered: 2 times
+Sphere 1, 179.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 179.0s, GT: Current Water Units: 4
+Sphere 1, 179.0s, GT: Waiting for 10 seconds...
+Sphere 2, 186.0s, DBG: Time left after 3rd melons, 54
+Sphere 2, 186.0s, DBG: Score, 52
+Sphere 2, 186.0s, DBG: Water left, 2
+Sphere 2, 186.0s, GT: Wait complete.
+Sphere 2, 186.0s, GT: Harvesting crop at plot 2: Melon (+11.0 points). Total score: 55.0
+Sphere 2, 186.0s, GT: Current Time: 186.00
+Sphere 2, 186.0s, GT: Required wait time for crop ID 4: 10 seconds
+Sphere 2, 186.0s, GT: Current Time: 186.00
+Sphere 2, 186.0s, GT: Current Water Units: 2
+Sphere 2, 186.0s, GT: Planting crop of type 4 at plot 2.
+Sphere 2, 186.0s, GT: Watered crop at plot 2. Water units left: 1. Crop watered: 1 times
+Sphere 2, 186.0s, GT: Waiting for 10 seconds...
+Sphere 1, 189.0s, GT: Wait complete.
+Sphere 1, 189.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 77.0
+Sphere 1, 189.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 1, 189.0s, GT: Watered crop at plot 1. Water units left: 3. Crop watered: 1 times
+Sphere 1, 189.0s, GT: Waiting for 10 seconds...
+Sphere 2, 196.0s, GT: Wait complete.
+Sphere 2, 196.0s, GT: Watered crop at plot 2. Water units left: 0. Crop watered: 2 times
+Sphere 2, 196.0s, GT: Crop at plot 2 is now growing. It can be harvested after 10 seconds.
+Sphere 2, 196.0s, GT: Waiting for 10 seconds...
+Sphere 1, 199.0s, GT: Wait complete.
+Sphere 1, 199.0s, GT: Watered crop at plot 1. Water units left: 2. Crop watered: 2 times
+Sphere 1, 199.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 199.0s, GT: Current Water Units: 2
+Sphere 1, 199.0s, GT: Waiting for 10 seconds...
+Sphere 2, 206.0s, GT: Wait complete.
+Sphere 2, 206.0s, GT: Harvesting crop at plot 2: Melon (+11.0 points). Total score: 66.0
+Sphere 2, 206.0s, GT: Computing Score
+Sphere 2, 206.0s, GT: ======================== End of Game ========================
+Sphere 2, 206.0s, GT: Computing Score
+Sphere 2, 206.0s, GT: ======================== End of Game ========================
+Sphere 1, 209.0s, GT: Wait complete.
+Sphere 1, 209.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 88.0
+Sphere 1, 209.0s, GT: Current Time: 209.00
+Sphere 1, 209.0s, GT: Planting crop of type 4 at plot 1.
+Sphere 1, 209.0s, GT: Watered crop at plot 1. Water units left: 1. Crop watered: 1 times
+Sphere 1, 209.0s, GT: Waiting for 10 seconds...
+Sphere 1, 219.0s, GT: Wait complete.
+Sphere 1, 219.0s, GT: Watered crop at plot 1. Water units left: 0. Crop watered: 2 times
+Sphere 1, 219.0s, GT: Crop at plot 1 is now growing. It can be harvested after 10 seconds.
+Sphere 1, 219.0s, GT: Waiting for 10 seconds...
+Sphere 1, 229.0s, GT: Wait complete.
+Sphere 1, 229.0s, GT: Harvesting crop at plot 1: Melon (+11.0 points). Total score: 99.0"

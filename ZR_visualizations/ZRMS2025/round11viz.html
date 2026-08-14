@@ -1,0 +1,1610 @@
+<!-- 
+go to directory with this file
+cd ~/Documents/GitHub/ZR_visualizations
+RUN:  python3 -m http.server 8000 
+open http://localhost:8000/round8viz.html
+hello
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ZR Code Visualizer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      font-family: monospace;
+      background: #111;
+      color: white;
+      overflow: hidden;
+    }
+
+    #layout {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #code,
+    #blueCode {
+      width: 20%;
+      padding: 20px;
+      max-height: 100vh;
+      overflow-y: auto;
+      background: #111;
+      border-right: 1px solid #444;
+    }
+
+    #blueCode {
+      border-left: 1px solid #444;
+      border-right: none;
+    }
+
+    #code pre,
+    #blueCode pre {
+      margin: 0;
+      padding: 5px;
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
+    #code .highlight,
+    #blueCode .highlight {
+      background: #333;
+      color: #0f0;
+      opacity: 1.0;
+    }
+
+    #sim {
+      flex-grow: 1;
+      position: relative;
+      background: black;
+      display: flex;
+      flex-direction: column;
+    }
+
+    canvas {
+      flex-grow: 1;
+      display: block;
+    }
+
+    #controls {
+      padding: 10px;
+      background: #111;
+      text-align: center;
+      border-top: 1px solid #333;
+      margin-top: -40px;
+    }
+
+    #controls button {
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      padding: 5px 10px;
+      margin: 0 5px;
+    }
+
+    #batteryValue,
+    #bonusCropDisplay {
+      position: absolute;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: monospace;
+      display: none;
+    }
+
+    #batteryValue {
+      top: 10px;
+      right: 10px;
+      color: yellow;
+    }
+
+    #bonusCropDisplay {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="red-wait"
+    style="display:none; position:fixed; left:20%; top:36px; background:rgba(255,70,70,0.92); color:white; font-family:monospace; font-size:22px; padding:7px 18px; border-radius:11px; z-index:99; font-weight:bold;">
+  </div>
+  <div id="blue-wait"
+    style="display:none; position:fixed; right:20%; top:36px; background:rgba(80,120,255,0.92); color:white; font-family:monospace; font-size:22px; padding:7px 18px; border-radius:11px; z-index:99; font-weight:bold;">
+  </div>
+  <div id="gameWinnerMessage" style="
+    position: absolute;
+    top: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    font-family: monospace;
+    color: #00ff99;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 14px;
+    border-radius: 10px;
+    display: none;
+    z-index: 20;
+    font-weight: bold;
+  ">
+  </div>
+  <div id="blueBonusMessage" style="
+    position: absolute;
+    top: 80px;
+    right: 180px;
+    transform: translateX(-50%);
+    font-size: 15px;
+    font-family: monospace;
+    color: #00ff99;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: none;
+    z-index: 20;
+  ">
+    Bonus crop harvested✨ +4 points
+  </div>
+  <div id="redBonusMessage" style="
+    position: absolute;
+    top: 80px;
+    left: 400px;
+    transform: translateX(-50%);
+    font-size: 15px;
+    font-family: monospace;
+    color: #00ff99;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: none;
+    z-index: 20;
+  ">
+    Bonus crop harvested✨ +4 points
+  </div>
+  <div id="gameTimer" style="
+    position: absolute;
+    top: 10px;
+    right: 320px;
+    color: #fff;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 8px;
+    z-index: 20;
+    font-family: monospace;
+  ">
+    Time: 0s
+  </div>
+  <div id="scoreBoard" style="
+    position: absolute;
+    bottom: 110px;
+    left: 70%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    z-index: 30;
+    font-family: monospace;
+  ">
+    Red Score: 0 | Blue Score: 0
+  </div>
+  <div id="layout">
+    <div id="code">
+      <pre id="line1">1: game.MoveWatering();</pre>
+      <pre id="line2">2: game.FillWateringCan();</pre>
+      <pre id="line3">3: game.MovePlot(1);</pre>
+      <pre id="line4">4: game.PlantCrop(1,1);</pre>
+      <pre id="line5">5: game.WaterCrop(1);</pre>
+      <pre id="line6">6: game.MovePlot(2);</pre>
+      <pre id="line7">7: game.PlantCrop(2, 2);</pre>
+      <pre id="line8">8: game.WaterCrop(2);</pre>
+      <pre id="line9">9: game.MovePlot(3);</pre>
+      <pre id="line10">10: game.PlantCrop(3, 4);</pre>
+      <pre id="line11">11: game.WaterCrop(3);</pre>
+      <pre id="line12">12: game.MoveAstronaut();</pre>
+      <pre id="line13">13: game.getBonusCrop();</pre>
+      <pre id="line14">14: game.LeaveAstronaut();</pre>
+      <pre id="line15">15: game.MovePlot(3);</pre>
+      <pre id="line16">16: game.WaterCrop(3);</pre>
+      <pre id="line17">17: game.MovePlot(2);</pre>
+      <pre id="line18">18: game.WaterCrop(2);</pre>
+      <pre id="line19">19: game.MovePlot(1);</pre>
+      <pre id="line20">20: game.WaterCrop(1);</pre>
+      <pre id="line21">21: game.SetWait(6);</pre>
+      <pre id="line22">22: game.HarvestCrop(1);</pre>
+      <pre id="line23">23: game.MovePlot(2);</pre>
+      <pre id="line24">24: game.HarvestCrop(2);</pre>
+      <pre id="line25">25: game.MovePlot(3);</pre>
+      <pre id="line26">26: game.HarvestCrop(3);</pre>
+    </div>
+
+    <div id="sim">
+      <div id="bonusCropDisplay"></div>
+      <div id="batteryValue"></div>
+      <canvas id="scene"></canvas>
+      <div id="controls">
+        <button onclick="playAnim()">Play</button>
+        <button onclick="pauseAnim()">Pause</button>
+        <button onclick="stepAnim()">Step</button>
+      </div>
+    </div>
+
+    <div id="blueCode">
+      <pre id="bline1">1: game.MoveAstronaut();</pre>
+      <pre id="bline2">2: bonus = game.GetBonusCrop();</pre>
+      <pre id="bline3">3: game.LeaveAstronaut();</pre>
+      <pre id="bline4">4: game.MovePlot(3);</pre>
+      <pre id="bline5">5: game.PlantCrop(3, bonus);</pre>
+      <pre id="bline6">6: game.WaterCrop(3);</pre>
+      <pre id="bline7">7: game.MovePlot(2);</pre>
+      <pre id="bline8">8: game.PlantCrop(2, bonus);</pre>
+      <pre id="bline9">9: game.WaterCrop(2);</pre>
+      <pre id="bline10">10: game.MovePlot(1);</pre>
+      <pre id="bline11">11: game.PlantCrop(1, bonus);</pre>
+      <pre id="bline12">12: game.WaterCrop(1);</pre>
+      <pre id="bline13">13: game.MovePlot(3);</pre>
+      <pre id="bline14">14: game.WaterCrop(3);</pre>
+      <pre id="bline15">15: game.MovePlot(2);</pre>
+      <pre id="bline16">16: game.WaterCrop(2);</pre>
+      <pre id="bline17">17: game.MovePlot(1);</pre>
+      <pre id="bline18">18: game.WaterCrop(1);</pre>
+      <pre id="bline19">19: game.SetWait(game.GetCropWaitTime(bonus));</pre>
+      <pre id="bline20">20: game.HarvestCrop(1);</pre>
+      <pre id="bline21">21: game.MovePlot(2);</pre>
+      <pre id="bline22">22: game.HarvestCrop(2);</pre>
+      <pre id="bline23">23: game.MovePlot(3);</pre>
+      <pre id="bline24">24: game.HarvestCrop(3);</pre>
+    </div>
+  </div>
+
+  <!-- Log panel: bottom centered, shows last 5 lines, autoscrolls -->
+  <div id="logPanel" style="
+    position: absolute;
+    left: 40%;
+    transform: translateX(-50%);
+    bottom: 45px;
+    width: 600px;
+    max-width: 95vw;
+    background: rgba(20,20,20,0.92);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: monospace;
+    color: #ccc;
+    z-index: 30;
+    overflow: hidden;
+    border: 1px solid #444;
+    box-shadow: 0 2px 20px #000b;
+    pointer-events: none;  /* keeps the log non-interactive */
+  ">
+    <div
+      style="font-weight: bold; color: #eee; background: #151515; border-radius: 10px 10px 0 0; padding: 7px 0 7px 0; text-align: center; font-size: 16px; letter-spacing: 0.5px;">
+      Game Log
+    </div>
+    <div id="logOutput" style="
+      padding: 12px 16px 10px 16px;
+      min-height: 6.8em; /* consistent height for 5 lines */
+      max-height: 7em;
+      overflow: auto;
+      font-size: 15px;
+      line-height: 1.35em;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    "></div>
+  </div>
+
+  <div id="allianceTitleBar"
+  style="
+    position: fixed;
+    left: 50%;
+    top: 36px;
+    transform: translateX(-50%);
+    min-width: 310px;
+    max-width: 390px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      90deg,
+      rgba(255,70,70,0.5) 0%,
+      rgba(255,70,70,0.5) 47%,
+      rgba(80,120,255,0.5) 53%,
+      rgba(80,120,255,0.5) 100%
+    );
+    border-radius: 18px;
+    color: #fff;
+    font-size: 19px;
+    font-family: monospace;
+    font-weight: bold;
+    letter-spacing: 1.3px;
+    text-align: center;
+    box-shadow: 0 2px 8px #0008;
+    z-index: 110;
+    pointer-events: none;
+    border: 1.5px solid #666a;
+  ">
+  <span style="color: #ffd9d9; text-shadow: 0 0 2px #f00b, 0 0 6px #a003; font-size: 20px;" id="redAllianceNum"></span>
+  <span style="opacity:0.67;font-size:15px; margin:0 7px 0 2px;">(Red)</span>
+  <span style="opacity:0.7;margin:0 14px;">vs</span>
+  <span style="color: #d4e7ff; text-shadow: 0 0 2px #07f, 0 0 6px #0377; font-size: 20px;" id="blueAllianceNum"></span>
+  <span style="opacity:0.67;font-size:15px; margin:0 2px 0 7px;">(Blue)</span>
+</div>
+
+
+
+  <div id="batteryValue"></div>
+  <canvas id="scene"></canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- GLTFLoader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.3/tween.umd.js"></script>
+
+
+  <script>
+    const LOG_FILE = 'round11log.txt'; 
+    const RED_ALLIANCE = 3;
+    const BLUE_ALLIANCE = 6;
+    const RED_FIN_SCORE = 103.374; 	
+    const BLUE_FIN_SCORE = 74.922;
+    let playbackspeed = 5.0; // 2x speed by default
+
+    document.getElementById('redAllianceNum').textContent = RED_ALLIANCE;
+    document.getElementById('blueAllianceNum').textContent = BLUE_ALLIANCE;
+
+
+    let logEvents = [];
+    let lastLogHTML = "";
+    let lastNumEvents = 0;
+    // When initializing (do this ONCE):
+    const logOutput = document.getElementById('logOutput');
+    const N = 5; // Show last N events
+    const previousHTML = new Array(N);
+
+    function updateLogDisplay(timeNow) {
+      const logDiv = document.getElementById("logOutput");
+      // Get how many logs are *already* present
+      let children = logDiv.children.length;
+      // Get all logs up to this time
+      const filtered = logEvents.filter(e => e.time <= timeNow);
+
+      // Only add new ones
+      for (let i = children; i < filtered.length; ++i) {
+        const evt = filtered[i];
+        const color = evt.sphere === 1 ? '#ff4e4e' : '#4e87ff';
+        const html = `<span style="color:${color};font-weight:bold;">Sphere ${evt.sphere}</span>
+      <span style="opacity:0.55;margin:0 7px 0 7px;">${evt.time?.toFixed(1).padStart(6, " ")}s</span>
+      <span>${evt.msg || ''}</span>`;
+        const div = document.createElement('div');
+        div.className = "logline";
+        div.innerHTML = html;
+        if (/wait|Waiting for|Wait complete/i.test(evt.msg)) {
+          div.classList.add("highlighted");
+        }
+        logDiv.appendChild(div);
+      }
+
+      // Remove if there are too many (optional, for performance)
+      while (logDiv.children.length > 1000) logDiv.removeChild(logDiv.firstChild);
+
+      // Always highlight the latest one
+      [...logDiv.children].forEach((div, idx) => {
+        div.classList.toggle("highlighted", idx === filtered.length - 1 ||
+          /wait|Waiting for|Wait complete/i.test(div.textContent));
+      });
+
+      // Only auto-scroll if at bottom (so manual review is never interrupted)
+      if (logDiv.scrollHeight - logDiv.scrollTop - logDiv.clientHeight < 4) {
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+    }
+
+
+    function animateWatering(plot) {
+      const count = 18;
+      const droplets = [];
+      for (let i = 0; i < count; ++i) {
+        const geometry = new THREE.SphereGeometry(0.012, 10, 10);
+        const material = new THREE.MeshBasicMaterial({ color: 0x33caff, transparent: true, opacity: 0.95 });
+        const drop = new THREE.Mesh(geometry, material);
+        drop.position.copy(plot.position).add(new THREE.Vector3(
+          (Math.random() - 0.5) * 0.13,
+          0.10 + Math.random() * 0.09,
+          (Math.random() - 0.5) * 0.13
+        ));
+        scene.add(drop);
+        droplets.push(drop);
+        // Animate droplet fall
+        const down = 0.09 + Math.random() * 0.09;
+        new TWEEN.Tween(drop.position)
+          .to({ y: plot.position.y + 0.01 }, 350 + Math.random() * 220)
+          .easing(TWEEN.Easing.Bounce.Out)
+          .onComplete(() => scene.remove(drop))
+          .start();
+      }
+
+      // Add a blue splash ring at the base
+      const splashGeo = new THREE.RingGeometry(0.03, 0.07, 24);
+      const splashMat = new THREE.MeshBasicMaterial({ color: 0x33caff, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+      const splash = new THREE.Mesh(splashGeo, splashMat);
+      splash.position.copy(plot.position);
+      splash.position.y += 0.001;
+      splash.rotation.x = -Math.PI / 2;
+      scene.add(splash);
+
+      splash.scale.set(0.5, 0.5, 0.5);
+      new TWEEN.Tween(splash.scale)
+        .to({ x: 1.3, y: 1.3, z: 1.3 }, 400)
+        .easing(TWEEN.Easing.Quadratic.Out)
+        .onUpdate(() => {
+          splash.material.opacity = Math.max(0, splash.material.opacity - 0.015);
+        })
+        .onComplete(() => scene.remove(splash))
+        .start();
+    }
+
+    function animatePlanting(plot, plantType) {
+      // Sprout
+      const geometry = new THREE.SphereGeometry(0.025, 16, 16);
+      const material = new THREE.MeshBasicMaterial({ color: 0x4cff36, transparent: true, opacity: 0.85 });
+      const sprout = new THREE.Mesh(geometry, material);
+      sprout.position.copy(plot.position).add(new THREE.Vector3(0, 0.09, 0));
+      sprout.scale.set(0.1, 0.1, 0.1);
+      scene.add(sprout);
+
+      //if plant type, show different text
+      const labelDiv = document.createElement('div');
+        if (plantType === "1") plantType = " Plant! 🍅";
+        else if (plantType === "2") plantType = " Plant! 🥬";
+        else if (plantType === "3") plantType = " Plant! 🍓";
+        else if (plantType === "4") plantType = " Plant! 🍈";
+        else plantType = " Plant! 🌱";
+      labelDiv.style.color = "#baff7a";
+      labelDiv.style.fontWeight = "bold";
+      labelDiv.style.fontSize = "18px";
+      labelDiv.style.textShadow = "0 1px 8px #222, 0 2px 8px #000";
+      labelDiv.style.opacity = "1";
+      const label = new THREE.CSS2DObject(labelDiv);
+      label.position.set(plot.position.x, plot.position.y + 0.16, plot.position.z);
+      scene.add(label);
+
+      // Sprout pop and bounce
+      new TWEEN.Tween(sprout.scale)
+        .to({ x: 1.2, y: 1.5, z: 1.2 }, 180)
+        .easing(TWEEN.Easing.Back.Out)
+        .onComplete(() => {
+          new TWEEN.Tween(sprout.scale)
+            .to({ x: 0.8, y: 1, z: 0.8 }, 180)
+            .easing(TWEEN.Easing.Bounce.Out)
+            .onComplete(() => {
+              scene.remove(sprout);
+            })
+            .start();
+        })
+        .start();
+
+      // Label fade out
+      setTimeout(() => {
+        labelDiv.style.transition = "opacity 0.4s";
+        labelDiv.style.opacity = "0";
+      }, 600);
+      setTimeout(() => {
+        scene.remove(label);
+      }, 1000);
+    }
+
+    function animateHarvesting(plot, score = 4) {
+      const sprite = document.createElement('div');
+      sprite.style.color = '#f6e96c';
+      sprite.style.fontWeight = 'bold';
+      sprite.style.fontSize = '18px';
+      sprite.textContent = `+${score}`;
+      sprite.style.textShadow = '0 1px 8px #222, 0 2px 8px #000';
+      sprite.style.opacity = 0.9;
+      const label = new THREE.CSS2DObject(sprite);
+      label.position.set(plot.position.x, plot.position.y + 0.13, plot.position.z);
+      scene.add(label);
+
+      let t = 0;
+      function animate() {
+        t += 0.03;
+        label.position.y += 0.004;
+        sprite.style.opacity = (0.9 - t * 0.6).toFixed(2);
+        if (t < 1) requestAnimationFrame(animate);
+        else scene.remove(label);
+      }
+      animate();
+    }
+
+
+
+
+
+
+    function findLastIdx(pred) {
+      for (let i = logEvents.length - 1; i >= 0; --i)
+        if (pred(logEvents[i])) return i;
+      return -1;
+    }
+
+    function logPlaybackSync() { updateLogDisplay(elapsedTime); }
+
+    // Fetch and process log file, then start interval
+    fetch(LOG_FILE)
+      .then(response => response.text())
+      .then(text => {
+        logEvents = text
+          .split('\n')
+          .filter(line => line.trim() !== '')
+          .map(line => {
+            const m = line.match(/^Sphere (\d), ([\d\.]+)s, GT: (.*)$/);
+            return m ? { time: parseFloat(m[2]), sphere: +m[1], msg: m[3] } : null;
+          })
+          .filter(Boolean);
+        setInterval(logPlaybackSync, 1000);
+      })
+      .catch(error => console.error('Error loading log file:', error));
+
+    const plotPositions = {
+      redHome: [0.0, 0.0, 0.3],
+      blueHome: [0.0, 0.0, -0.3],
+      wateringZone: [0.0, 0.0, 0.0],
+      astronaut: [0.0, 1.5, 0.0],
+
+      // Red robot plots
+      redPlot1: [-0.35, 0.6, 0.5],
+      redPlot2: [0.35, 0.6, 0.5],
+      redPlot3: [0.0, 1.0, 0.5],
+
+      // Blue robot plots
+      bluePlot1: [-0.35, 0.6, -0.5],
+      bluePlot2: [0.35, 0.6, -0.5],
+      bluePlot3: [0.0, 1.0, -0.5]
+    };
+
+    // make sure the movement times align with the game simulation times
+    let bonusCrop = Math.floor(Math.random() * 4) + 1;
+    const redSteps = [
+      { line: 1, target: plotPositions.wateringZone },
+      { line: 2, action: 'fill' },
+      { line: 3, target: plotPositions.redPlot1 },
+      { line: 4, plot: 1, action: 'plant' },
+      { line: 5, plot: 1, action: 'water' },
+      { line: 6, target: plotPositions.redPlot2 },
+      { line: 7, plot: 2, action: "plant" },
+      { line: 8, plot: 2, action: 'water' },
+      { line: 9, target: plotPositions.redPlot3 },
+      { line: 10, plot: 3, action: "plant" },
+      { line: 11, plot: 3, action: 'water' },
+      { line: 12, target: plotPositions.astronaut },
+      { line: 13, action: 'bonus' },
+      { line: 14 },
+      { line: 15, target: plotPositions.redPlot3 },
+      { line: 16, plot: 3, action: 'water' },
+      { line: 17, target: plotPositions.redPlot2 },
+      { line: 18, plot: 2, action: 'water' },
+      { line: 19, target: plotPositions.redPlot1 },
+      { line: 20, plot: 1, action: 'water' },
+      { line: 21, action: 'wait', duration: 6 },
+      { line: 22, plot: 1, action: 'harvest', crop: 1 },
+      { line: 23, target: plotPositions.redPlot2 },
+      { line: 24, plot: 2, action: 'harvest', crop: 2 },
+      { line: 25, target: plotPositions.redPlot3 },
+      { line: 26, plot: 3, action: 'harvest', crop: 4 }
+    ];
+
+    const blueSteps = [
+      { action: 'move', target: plotPositions.astronaut },
+      { action: 'bonus' },
+      { action: 'leaveAstronaut' },
+      { action: 'move', target: plotPositions.bluePlot3 },
+      { action: 'plant', plot: 3 },
+      { action: 'water', plot: 3 },
+      { action: 'move', target: plotPositions.bluePlot2 },
+      { action: 'plant', plot: 2 },
+      { action: 'water', plot: 2 },
+      { action: 'move', target: plotPositions.bluePlot1 },
+      { action: 'plant', plot: 1 },
+      { action: 'water', plot: 1 },
+      { action: 'move', target: plotPositions.bluePlot3 },
+      { action: 'water', plot: 3 },
+      { action: 'move', target: plotPositions.bluePlot2 },
+      { action: 'water', plot: 2 },
+      { action: 'move', target: plotPositions.bluePlot1 },
+      { action: 'water', plot: 1 },
+      { action: 'wait', getWait: () => getCropWaitTime(bonusCrop) },
+      { action: 'harvest', plot: 1, crop: bonusCrop },
+      { action: 'move', target: plotPositions.bluePlot2 },
+      { action: 'harvest', plot: 2, crop: bonusCrop },
+      { action: 'move', target: plotPositions.bluePlot3 },
+      { action: 'harvest', plot: 3, crop: bonusCrop }
+    ];
+
+
+    const cropMap = {
+      1: 'Tomato 🍅',
+      2: 'Cabbage 🥬',
+      3: 'Strawberry 🍓',
+      4: 'Melon 🍈'
+    };
+    let currentStep = 0;
+    let playing = false;
+    let timer = null;
+    let moveSpeed = 0.02;
+    let redMoving = false;
+    let redTarget = null;
+    let redWaitCounter = 0;
+    let blueMoving = false;
+    let blueTarget = null;
+    let blueStepIndex = 0;
+    let blueWaitCounter = 0;
+    let elapsedTime = 0;
+    let timerInterval = null;
+
+    // scoring variables
+    let redScore = 0;
+    let blueScore = 0;
+    let redBonuses = 0;
+    let blueBonuses = 0;
+    let redUsedBonus = false;
+    let blueUsedBonus = false;
+    function highlightLine(n) {
+      for (let i = 1; i <= 26; i++) {
+        document.getElementById('line' + i).classList.remove('highlight');
+      }
+      const lineElem = document.getElementById('line' + n);
+      if (lineElem) {
+        lineElem.classList.add('highlight');
+        const container = document.getElementById('code');
+        const offsetTop = lineElem.offsetTop - container.offsetTop;
+        container.scrollTo({
+          top: offsetTop - container.clientHeight / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    function highlightBlueLine(n) {
+      for (let i = 1; i <= 24; i++) {
+        document.getElementById('bline' + i).classList.remove('highlight');
+      }
+      const lineElem = document.getElementById('bline' + n);
+      if (lineElem) {
+        lineElem.classList.add('highlight');
+        const container = document.getElementById('code');
+        const offsetTop = lineElem.offsetTop - container.offsetTop;
+        container.scrollTo({
+          top: offsetTop - container.clientHeight / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    function getPlotByNumber(robot, n) {
+      if (robot === 'red') {
+        return { 1: redPlot1, 2: redPlot2, 3: redPlot3 }[n];
+      } else if (robot === 'blue') {
+        return { 1: bluePlot1, 2: bluePlot2, 3: bluePlot3 }[n];
+      }
+    }
+
+    function showBonusMessage(color) {
+      let message = document.getElementById('blueBonusMessage');
+      if (color == 'red') {
+        message = document.getElementById('redBonusMessage');
+      }
+      message.style.display = 'block';
+      message.style.opacity = '1';
+
+      setTimeout(() => {
+        message.style.transition = 'opacity 0.5s';
+        message.style.opacity = '0';
+      }, 1500);
+      setTimeout(() => {
+        message.style.display = 'none';
+        message.style.transition = '';
+        message.style.opacity = '1';
+      }, 2000);
+    }
+
+    function showGameWinner(winner) {
+      const message = document.getElementById('gameWinnerMessage');
+      message.innerText = `${winner} wins ! 🎉`;
+      message.style.display = 'block';
+      message.style.opacity = '1';
+
+      setTimeout(() => {
+        message.style.transition = 'opacity 0.5s';
+        message.style.opacity = '0';
+      }, 4000);
+      setTimeout(() => {
+        message.style.display = 'none';
+        message.style.transition = '';
+        message.style.opacity = '1';
+      }, 4500);
+    }
+
+    function createLabel(text) {
+      const div = document.createElement('div');
+      div.className = 'label';
+      div.textContent = text;
+      div.style.marginTop = '-1em';
+      div.style.color = 'white';
+      div.style.fontSize = '12px';
+      div.style.background = 'rgba(0,0,0,0.6)';
+      div.style.padding = '2px 4px';
+      div.style.borderRadius = '4px';
+      return new THREE.CSS2DObject(div);
+    }
+
+    function getCropWaitTime(cropId) {
+      const waitTimes = {
+        1: 6,  // Tomato
+        2: 8,  // Cabbage
+        3: 5,  // Strawberry
+        4: 10  // Melon
+      };
+      return waitTimes[cropId] || 6; // default to 6 if undefined
+    }
+
+    function getCropScore(id) {
+      const scores = { 1: 6, 2: 7, 3: 4, 4: 11 };
+      return scores[id] || 0;
+    }
+
+    function updateScoreDisplay(note = "") {
+      let text = `Red Score: ${redScore} | Blue Score: ${blueScore}`;
+      if (note) text += `\n${note}`;
+      document.getElementById('scoreBoard').innerText = text;
+    }
+
+    function showFinalScores() {
+      // Replace with your real final values if computed elsewhere:
+      const finalRed = RED_FIN_SCORE;
+      const finalBlue = BLUE_FIN_SCORE;
+
+      // Update the display
+      document.getElementById('scoreBoard').innerText =
+        `Red Final Score: ${finalRed}\nBlue Final Score: ${finalBlue}\n(including battery score)`;
+
+      //set final scores to the variables
+      redScore = finalRed;
+      blueScore = finalBlue;
+    }
+
+
+
+    function performRedStep(step) {
+      highlightLine(step.line);
+      if (step.target) {
+        redTarget = new THREE.Vector3(...step.target);
+        redMoving = true;
+        return;
+      } else if (step.action === 'plant') {
+        const plot = getPlotByNumber('red', step.plot);
+        plot.material.color.set(0x00ff00);
+        setTimeout(() => plot.material.color.set(0xff0000), 500);
+      } else if (step.action === 'water') {
+        const plot = getPlotByNumber('red', step.plot);
+        const pulse = () => {
+          plot.material.color.set(0xadd8e6);
+          plot.scale.set(1.2, 1.2, 1.2);
+          setTimeout(() => {
+            plot.scale.set(1, 1, 1);
+            plot.material.color.set(0xff0000);
+          }, 200);
+        };
+        pulse();
+      }
+      else if (step.action === 'battery') {
+        const val = (Math.random() * 100).toFixed(1);
+        const batteryDisplay = document.getElementById('batteryValue');
+        batteryDisplay.innerText = `Battery: ${val}%`;
+        batteryDisplay.style.display = 'block';
+        setTimeout(() => batteryDisplay.style.display = 'none', 2000);
+      }
+      else if (step.action == 'fill') {
+        highlightRobot(redRobot, 0x3b9ade);
+      }
+      else if (step.action == 'bonus') {
+        const cropName = cropMap[bonusCrop];
+        const bonusDisplay = document.getElementById('bonusCropDisplay');
+        bonusDisplay.innerText = `Bonus Crop: ${cropName}`;
+        bonusDisplay.style.display = 'block';
+        setTimeout(() => (bonusDisplay.style.display = 'none'), 2000);
+        highlightRobot(redRobot, 0xeceb4f)
+        redUsedBonus = true;
+      }
+      else if (step.action == 'harvest') {
+        const plot = getPlotByNumber('red', step.plot);
+        plot.material.color.set(0x389931);
+        plot.scale.set(1.3, 1.3, 1.3);
+        setTimeout(() => plot.scale.set(1, 1, 1), 300);
+
+        // Update score
+        console.log(bonusCrop)
+        console.log(step.crop == bonusCrop)
+        redScore += getCropScore(step.crop);
+        if (step.crop == bonusCrop && redUsedBonus) {
+          redBonuses++;
+          if (redBonuses <= 3) {
+            redScore += 4;
+            showBonusMessage('red');
+          }
+        }
+        updateScoreDisplay();
+      }
+      else if (step.action == 'wait') {
+        if (redWaitCounter == 0) {
+          redWaitCounter = step.duration || 1;  // default to 1 if duration not set
+        }
+        redWaitCounter--;
+        if (redWaitCounter > 0) {
+          currentStep--; // stay on this step for the next interval
+        } else {
+          redWaitCounter = 0; // reset after done
+        }
+      }
+    }
+
+    function performBlueStep(step) {
+      highlightBlueLine(blueStepIndex + 1);
+      if (step.target) {
+        blueTarget = new THREE.Vector3(...step.target);
+        blueMoving = true;
+        return;
+      } else if (step.action === 'bonus') {
+        const cropName = cropMap[bonusCrop];
+        const bonusDisplay = document.getElementById('bonusCropDisplay');
+        bonusDisplay.innerText = `Bonus Crop: ${cropName}`;
+        bonusDisplay.style.display = 'block';
+        setTimeout(() => (bonusDisplay.style.display = 'none'), 2000);
+        highlightRobot(blueRobot, 0xeceb4f)
+        blueUsedBonus = true;
+      } else if (step.action === 'plant') {
+        const plot = getPlotByNumber('blue', step.plot);
+        plot.material.color.set(0x00ff00);
+        setTimeout(() => plot.material.color.set(0x0000ff), 500);
+      } else if (step.action === 'water') {
+        const plot = getPlotByNumber('blue', step.plot);
+        plot.material.color.set(0xadd8e6);
+        plot.scale.set(1.2, 1.2, 1.2);
+        setTimeout(() => {
+          plot.scale.set(1, 1, 1);
+          plot.material.color.set(0x0000ff);
+        }, 200);
+      } else if (step.action === 'harvest') {
+        const plot = getPlotByNumber('blue', step.plot);
+        plot.material.color.set(0x389931);
+        plot.scale.set(1.3, 1.3, 1.3);
+        setTimeout(() => plot.scale.set(1, 1, 1), 300);
+        blueScore += getCropScore(step.crop);
+        if (step.crop == bonusCrop && blueUsedBonus) {
+          blueBonuses++;
+          if (blueBonuses <= 3) {
+            blueScore += 4;
+            showBonusMessage('blue');
+          }
+        }
+        updateScoreDisplay();
+      } else if (step.action === 'wait') {
+        if (blueWaitCounter === 0) {
+          blueWaitCounter = typeof step.getWait === 'function' ? step.getWait() : 1;
+        }
+        blueWaitCounter--;
+        if (blueWaitCounter > 0) {
+          blueStepIndex--; // repeat step
+        } else {
+          blueWaitCounter = 0;
+        }
+      }
+    }
+
+    function highlightRobot(robot, glowColor) {
+      // Create a glow ring
+      const glow = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 32, 32),
+        new THREE.MeshBasicMaterial({
+          color: glowColor, transparent: true, opacity: 0.3,
+          side: THREE.DoubleSide,
+        })
+      );
+
+      glow.name = 'highlight-glow';
+
+      robot.add(glow);
+
+      setTimeout(() => {
+        const glowToRemove = robot.getObjectByName('highlight-glow');
+        if (glowToRemove) robot.remove(glowToRemove);
+      }, 400);
+    }
+
+    function stepAnim() {
+      if (currentStep >= redSteps.length || redMoving) return;
+      const rstep = redSteps[currentStep];
+      if (rstep.target) {
+        redTarget = new THREE.Vector3(...rstep.target);
+        redMoving = true;
+      } else {
+        // if not a movement step, apply the action immediately
+        performRedStep(step);
+        currentStep++;
+        setTimeout(stepAnim, 500);
+      }
+      if (currentStep >= blueSteps.length || blueMoving) return;
+      const bstep = blueSteps[blueStepIndex];
+      if (bstep.target) {
+        blueTarget = new THREE.Vector3(...bstep.target);
+        blueMoving = true;
+      } else {
+        // if not a movement step, apply the action immediately
+        performBlueStep(bstep);
+        blueStepIndex++;
+        setTimeout(stepAnim, 500);
+      }
+    }
+    let playbackTimer = null;
+    let playbackElapsed = 0;
+    let currentLogIndex = 0;
+
+    function playAnim() {
+      if (playing) return;
+      playing = true;
+      playbackElapsed = 0;
+      currentLogIndex = 0;
+      // Reset all game/scene state to start
+
+      playbackTimer = setInterval(() => {
+        playbackElapsed += 0.5;
+        document.getElementById("gameTimer").innerText = `Time: ${playbackElapsed.toFixed(1)}s`;
+
+        // Process log events for this frame
+        while (currentLogIndex < logEvents.length && logEvents[currentLogIndex].time <= playbackElapsed) {
+          handleLogEvent(logEvents[currentLogIndex]);
+          currentLogIndex++;
+        }
+        updateLogDisplay(playbackElapsed);
+
+        // Check if we're done
+        if (currentLogIndex >= logEvents.length) {
+          clearInterval(playbackTimer);
+          playing = false;
+          showFinalScores();
+          // show winner
+          if (redScore > blueScore) {
+            showGameWinner("Red - Alliance" + RED_ALLIANCE);
+          } else if (blueScore > redScore) {
+            showGameWinner("Blue - Alliance" + BLUE_ALLIANCE);
+          } else {
+            showGameWinner("Tie! Both");
+          }
+        }
+      }, 500 / playbackspeed);
+    }
+
+    function showWait(which, seconds) {
+      const div = document.getElementById(which === 1 ? 'red-wait' : 'blue-wait');
+      div.textContent = `Waiting: ${seconds}s`;
+      div.style.display = 'block';
+    }
+    function hideWait(which) {
+      const div = document.getElementById(which === 1 ? 'red-wait' : 'blue-wait');
+      div.style.display = 'none';
+    }
+
+
+
+    function handleLogEvent(evt) {
+      // === MOVEMENT ===
+      let matchMovePlot = evt.msg.match(/^MovePlot\((\d)\)/);
+      let matchMovingToPlot = evt.msg.match(/^Moving to plot (\d): \(([-\d\.]+), ([-\d\.]+), ([-\d\.]+)\)/);
+      let matchMovingToPosition = evt.msg.match(/^Moving to Position: \(([-\d\.]+), ([-\d\.]+), ([-\d\.]+)\)/);
+
+      if (matchMovePlot) {
+        const plotNum = +matchMovePlot[1];
+        if (evt.sphere === 1) {
+          redTarget = new THREE.Vector3(...plotPositions[`redPlot${plotNum}`]);
+          redMoving = true;
+          // highlightLine(3); // or dynamically map log to code line
+        } else {
+          blueTarget = new THREE.Vector3(...plotPositions[`bluePlot${plotNum}`]);
+          blueMoving = true;
+          // highlightBlueLine(4); // or as needed
+        }
+        // do *not* return!
+      }
+      if (matchMovingToPlot) {
+        const plotNum = +matchMovingToPlot[1];
+        const x = parseFloat(matchMovingToPlot[2]);
+        const y = parseFloat(matchMovingToPlot[3]);
+        const z = parseFloat(matchMovingToPlot[4]);
+        if (evt.sphere === 1) {
+          redTarget = new THREE.Vector3(x, y, z);
+          redMoving = true;
+        } else {
+          blueTarget = new THREE.Vector3(x, y, z);
+          blueMoving = true;
+        }
+        // do *not* return!
+      }
+      if (matchMovingToPosition) {
+        const x = parseFloat(matchMovingToPosition[1]);
+        const y = parseFloat(matchMovingToPosition[2]);
+        const z = parseFloat(matchMovingToPosition[3]);
+        if (evt.sphere === 1) {
+          redTarget = new THREE.Vector3(x, y, z);
+          redMoving = true;
+        } else {
+          blueTarget = new THREE.Vector3(x, y, z);
+          blueMoving = true;
+        }
+        // do *not* return!
+      }
+
+      // PLANTING
+      let matchPlant = evt.msg.match(/^Planting crop of type (\d) at plot (\d)/);
+      if (matchPlant) {
+        const plotType = +matchPlant[1];
+        const plotNum = +matchPlant[2];
+        const plot = evt.sphere === 1 ? getPlotByNumber('red', plotNum) : getPlotByNumber('blue', plotNum);
+        animatePlanting(plot, plotType);
+        plot.material.color.set(0x00ff00);
+        setTimeout(() => plot.material.color.set(evt.sphere === 1 ? 0xff0000 : 0x0000ff), 500);
+      }
+
+      // WATERING
+      if (evt.msg.match(/^Filled watering can with (\d+) units/)) {
+        // Show a blue +6 above the watering zone and fade out
+        const sprite = document.createElement('div');
+        sprite.className = 'wateringLabel';
+        sprite.textContent = '+6';
+        sprite.style.color = '#3b9ade';
+        sprite.style.fontSize = '16px';
+        sprite.style.fontWeight = 'bold';
+        sprite.style.textShadow = '0 1px 8px #222, 0 2px 8px #000';
+        sprite.style.opacity = '1';
+        const label = new THREE.CSS2DObject(sprite);
+        // Place above watering zone
+        label.position.set(plotPositions.wateringZone[0], plotPositions.wateringZone[1] + 0.13, plotPositions.wateringZone[2]);
+        scene.add(label);
+
+        // Fade out and remove after 1.2s
+        setTimeout(() => {
+          sprite.style.transition = 'opacity 0.5s';
+          sprite.style.opacity = '0';
+        }, 700);
+        setTimeout(() => {
+          scene.remove(label);
+        }, 1000);
+
+        if (evt.sphere === 1) {
+          highlightRobot(redRobot, 0x3b9ade);
+          redRobot.position.copy(new THREE.Vector3(...plotPositions.wateringZone));
+        } else {
+          highlightRobot(blueRobot, 0x3b9ade);
+          blueRobot.position.copy(new THREE.Vector3(...plotPositions.wateringZone));
+        }
+        // Optionally, show water units
+        const val = evt.msg.match(/with (\d+) units/)[1];
+        const batteryDisplay = document.getElementById('batteryValue');
+        batteryDisplay.innerText = `Water Units: ${val}`;
+        batteryDisplay.style.display = 'block';
+        setTimeout(() => batteryDisplay.style.display = 'none', 2000);
+      }
+
+      let matchWateredPlot = evt.msg.match(/^Watered crop at plot (\d+)\. Water units left: (\d+)\. Crop watered: (\d+) times/);
+      if (matchWateredPlot) {
+        const plotNum = +matchWateredPlot[1];
+        const plot = evt.sphere === 1 ? getPlotByNumber('red', plotNum) : getPlotByNumber('blue', plotNum);
+        animateWatering(plot);  // this will run your droplet/splash animation at the correct plot!
+        plot.material.color.set(evt.sphere === 1 ? 0xff0000 : 0x0000ff);
+        setTimeout(() => plot.material.color.set(evt.sphere === 1 ? 0xff0000 : 0x0000ff), 200);
+        // Update watering count
+        const wateredCount = +matchWateredPlot[3];
+        const label = createLabel(`Watered: ${wateredCount} times`);
+        label.position.set(plot.position.x, plot.position.y + 0.13, plot.position.z);
+        scene.add(label);
+        setTimeout(() => {
+          scene.remove(label);
+        }, 1000);
+      }
+
+      // Move to watering zone if opponent is not targeting watering
+      if (evt.msg.includes("Opponent not targeting watering. Proceeding.")) {
+        if (evt.sphere === 1) {
+          redTarget = new THREE.Vector3(...plotPositions.wateringZone);
+          redMoving = true;
+          highlightLine(/* lineNum, if you want to highlight code */);
+        } else {
+          blueTarget = new THREE.Vector3(...plotPositions.wateringZone);
+          blueMoving = true;
+          highlightBlueLine(/* lineNum, if needed */);
+        }
+      }
+
+
+// --- HARVEST (keep as is) ---
+let matchHarvest = evt.msg.match(/^Harvesting crop at plot (\d+): (.+) \(\+([\d\.]+) points\)\. Total score: ([\d\.]+)/);
+if (matchHarvest) {
+    const plotNum = +matchHarvest[1];
+    const cropName = matchHarvest[2];
+    const score = +matchHarvest[3];
+    const total = +matchHarvest[4];
+    const plot = evt.sphere === 1 ? getPlotByNumber('red', plotNum) : getPlotByNumber('blue', plotNum);
+
+    animateHarvesting(plot, score);
+
+    plot.material.color.set(0x389931);
+    plot.scale.set(1.3, 1.3, 1.3);
+    setTimeout(() => plot.scale.set(1, 1, 1), 300);
+
+    // Update score + display
+    if (evt.sphere === 1) {
+        redScore = total;
+    } else {
+        blueScore = total;
+    }
+    updateScoreDisplay();
+}
+
+// --- BONUS POP-UP: Separate block ---
+if (/Bonus crop harvested/.test(evt.msg)) {
+    // Find the most recent harvest event for this sphere (before this event)
+    let lastHarvestIdx = -1;
+    for (let i = currentLogIndex - 1; i >= 0; i--) {
+        if (
+            logEvents[i].sphere === evt.sphere &&
+            /^Harvesting crop at plot (\d+):/.test(logEvents[i].msg)
+        ) {
+            lastHarvestIdx = i;
+            break;
+        }
+    }
+    if (lastHarvestIdx !== -1) {
+        const harvestEvt = logEvents[lastHarvestIdx];
+        const match = harvestEvt.msg.match(/^Harvesting crop at plot (\d+):/);
+        if (match) {
+            const plotNum = +match[1];
+            const plot = evt.sphere === 1 ? getPlotByNumber('red', plotNum) : getPlotByNumber('blue', plotNum);
+
+            // Create "+4 Bonus!" pop-up
+            const div = document.createElement('div');
+            div.textContent = "+4 Bonus!";
+            div.style.color = "#f6e96c";
+            div.style.fontWeight = "bold";
+            div.style.fontSize = "19px";
+            div.style.background = "rgba(40,40,0,0.82)";
+            div.style.padding = "3px 10px";
+            div.style.borderRadius = "8px";
+            div.style.boxShadow = "0 0 12px #f6e96c55";
+            div.style.textShadow = "0 2px 9px #000b";
+            div.style.opacity = 0.97;
+
+            div.animate([
+                { transform: "scale(0.7)", opacity: 0.8 },
+                { transform: "scale(1.2)", opacity: 1 },
+                { transform: "scale(1.0)", opacity: 0.97 }
+            ], { duration: 380, fill: "forwards", easing: "cubic-bezier(.6,1.6,.43,1)" });
+
+            const bonusLabel = new THREE.CSS2DObject(div);
+            bonusLabel.position.set(plot.position.x, plot.position.y + 0.23, plot.position.z + 0.05);
+            scene.add(bonusLabel);
+
+            setTimeout(() => {
+                div.style.transition = "opacity 0.5s";
+                div.style.opacity = "0";
+            }, 1200);
+            setTimeout(() => scene.remove(bonusLabel), 1700);
+        }
+    }
+}
+
+
+
+      if (evt.msg.match(/^Filled watering can with (\d+) units/)) {
+        // Optional: flash, highlight, or show a water splash at watering zone
+        if (evt.sphere === 1) {
+          highlightRobot(redRobot, 0x3b9ade);
+          redRobot.position.copy(new THREE.Vector3(...plotPositions.wateringZone));
+        } else {
+          highlightRobot(blueRobot, 0x3b9ade);
+          blueRobot.position.copy(new THREE.Vector3(...plotPositions.wateringZone));
+        }
+        // Optionally, show water units
+        const val = evt.msg.match(/with (\d+) units/)[1];
+        const batteryDisplay = document.getElementById('batteryValue');
+        batteryDisplay.innerText = `Water Units: ${val}`;
+        batteryDisplay.style.display = 'block';
+        setTimeout(() => batteryDisplay.style.display = 'none', 2000);
+      }
+
+
+
+      // In your event handler, just use this:
+      if (evt.msg.match(/Waiting for (\d+) seconds/)) {
+        const seconds = parseInt(evt.msg.match(/(\d+)/)[1]);
+        let waitElapsed = 0;
+        if (evt.sphere === 1) {
+          redWaitCounter = seconds;
+          highlightLine(redSteps[currentStep].line);
+          showWait(1, seconds);
+
+          // Animate countdown for red
+          const waitInterval = setInterval(() => {
+            waitElapsed++;
+            showWait(1, seconds - waitElapsed);
+            if (waitElapsed >= seconds) {
+              clearInterval(waitInterval);
+              hideWait(1);
+            }
+          }, 1000 / playbackspeed);
+        } else {
+          blueWaitCounter = seconds;
+          highlightBlueLine(blueStepIndex + 1);
+          showWait(2, seconds);
+
+          // Animate countdown for blue
+          const waitInterval = setInterval(() => {
+            waitElapsed++;
+            showWait(2, seconds - waitElapsed);
+            if (waitElapsed >= seconds) {
+              clearInterval(waitInterval);
+              hideWait(2);
+            }
+          }, 1000 / playbackspeed);
+        }
+        // return; // do not continue processing
+      }
+
+      // To hide when wait is complete:
+      if (/Wait complete/i.test(evt.msg)) {
+        hideWait(evt.sphere);
+      }
+
+      // BONUS CROP RECEIVED popup with emoji
+let matchBonusReceived = evt.msg.match(/^Bonus crop received: (\d) \((.+)\)/);
+if (matchBonusReceived) {
+    const bonusId = +matchBonusReceived[1];
+    const bonusName = matchBonusReceived[2];
+
+    // Map crop ID to emoji
+    const cropEmojis = {
+        1: "🍅", // Tomato
+        2: "🥬", // Cabbage
+        3: "🍓", // Strawberry
+        4: "🍈"  // Melon
+    };
+    const emoji = cropEmojis[bonusId] || "🌱";
+    // Find the right robot
+    const robot = evt.sphere === 1 ? redRobot : blueRobot;
+    if (robot) {
+        const div = document.createElement('div');
+        div.textContent = `${emoji} Bonus Crop: ${bonusName}`;
+        div.style.color = "#00ff99";
+        div.style.fontWeight = "bold";
+        div.style.fontSize = "18px";
+        div.style.background = "rgba(20,32,24,0.92)";
+        div.style.padding = "5px 16px";
+        div.style.borderRadius = "9px";
+        div.style.boxShadow = "0 0 10px #00ff9940";
+        div.style.textShadow = "0 2px 9px #000b";
+        div.style.opacity = "1";
+        div.animate([
+            { transform: "scale(0.7)", opacity: 0.7 },
+            { transform: "scale(1.13)", opacity: 1 },
+            { transform: "scale(1.0)", opacity: 1 }
+        ], { duration: 350, fill: "forwards", easing: "cubic-bezier(.6,1.6,.43,1)" });
+        const label = new THREE.CSS2DObject(div);
+        // Position to the side of the robot
+        const offset = evt.sphere === 1 ? 0.14 : -0.14;
+        label.position.set(
+            robot.position.x + offset,
+            robot.position.y + 0.13,
+            robot.position.z
+        );
+        scene.add(label);
+
+        setTimeout(() => {
+            div.style.transition = "opacity 0.55s";
+            div.style.opacity = "0";
+        }, 1500);
+        setTimeout(() => scene.remove(label), 1900);
+    }
+}
+
+    //proceeding to astronaut
+      if (evt.msg.includes("Proceeding to astronaut")) {
+        if (evt.sphere === 1) {
+          redTarget = new THREE.Vector3(...plotPositions.astronaut);
+          redMoving = true;
+          highlightLine(26); // or dynamically map log to code line
+        } else {
+          blueTarget = new THREE.Vector3(...plotPositions.astronaut);
+          blueMoving = true;
+          highlightBlueLine(24); // or as needed
+        }
+      }
+
+      // Handle any other messages or actions here
+      console.log(`Log Event: ${evt.msg}`);       
+
+
+
+    }
+
+
+
+    function pauseAnim() {
+      clearInterval(timer);
+      clearInterval(timerInterval);
+      playing = false;
+    }
+
+    // THREE.js scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, (window.innerWidth / 2) / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene') });
+    renderer.setSize(window.innerWidth / 2, window.innerHeight);
+
+    const labelRenderer = new THREE.CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth / 2, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.getElementById('sim').appendChild(labelRenderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
+    controls.rotateSpeed = 0.3;
+    controls.zoomSpeed = 0.5;
+
+    const robotRadius = 0.05;
+    const robotGeo = new THREE.SphereGeometry(robotRadius, 32, 32);
+
+
+    // Load GLTF models for robots
+    // const gltfLoader = new THREE.GLTFLoader();
+    // let redRobot, blueRobot;
+
+    const scaleFactor = 0.5;
+
+    function fallbackRedRobot() {
+      const mat = new THREE.MeshBasicMaterial({ color: 0xff4444 });
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.07, 32, 32), mat);
+      mesh.position.set(...plotPositions.redHome);
+      return mesh;
+    }
+
+    function fallbackBlueRobot() {
+      const mat = new THREE.MeshBasicMaterial({ color: 0x4444ff });
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.07, 32, 32), mat);
+      mesh.position.set(...plotPositions.blueHome);
+      return mesh;
+    }
+
+    let redRobot = null, blueRobot = null;
+    let redLoaded = false, blueLoaded = false;
+
+    function maybeStart() {
+      if (redLoaded && blueLoaded) {
+        animate();
+        playAnim();
+      }
+    }
+
+    const gltfLoader = new THREE.GLTFLoader();
+    gltfLoader.load('honey.glb', (gltf) => {
+      redRobot = gltf.scene;
+      redRobot.scale.set(scaleFactor, scaleFactor, scaleFactor);
+      redRobot.position.set(...plotPositions.redHome);
+      scene.add(redRobot);
+      redLoaded = true;
+      maybeStart();
+    }, undefined, (err) => {
+      // Fallback if honey.glb fails
+      console.warn('Could not load honey.glb, using sphere.', err);
+      redRobot = fallbackRedRobot();
+      scene.add(redRobot);
+      redLoaded = true;
+      maybeStart();
+    });
+
+    gltfLoader.load('bumble2.glb', (gltf) => {
+      blueRobot = gltf.scene;
+      blueRobot.scale.set(scaleFactor, scaleFactor, scaleFactor);
+      blueRobot.position.set(...plotPositions.blueHome);
+      scene.add(blueRobot);
+      blueLoaded = true;
+      maybeStart();
+    }, undefined, (err) => {
+      // Fallback if bumble2.glb fails
+      console.warn('Could not load bumble2.glb, using sphere.', err);
+      blueRobot = fallbackBlueRobot();
+      scene.add(blueRobot);
+      blueLoaded = true;
+      maybeStart();
+    });
+
+
+
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 2, 3);
+    scene.add(directionalLight);
+
+    const redPlotGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const redPlotMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.4 });
+
+    const redPlot1 = new THREE.Mesh(redPlotGeo, redPlotMat.clone());
+    redPlot1.position.set(...plotPositions.redPlot1);
+    scene.add(redPlot1);
+
+    const redPlot2 = new THREE.Mesh(redPlotGeo, redPlotMat.clone());
+    redPlot2.position.set(...plotPositions.redPlot2);
+    scene.add(redPlot2);
+
+    const redPlot3 = new THREE.Mesh(redPlotGeo, redPlotMat.clone());
+    redPlot3.position.set(...plotPositions.redPlot3);
+    scene.add(redPlot3);
+
+    redPlot1.add(createLabel("Red Plot 1"));
+    redPlot2.add(createLabel("Red Plot 2"));
+    redPlot3.add(createLabel("Red Plot 3"));
+
+    const bluePlotMat = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.4 });
+
+    const bluePlot1 = new THREE.Mesh(redPlotGeo.clone(), bluePlotMat.clone());
+    bluePlot1.position.set(...plotPositions.bluePlot1);
+    scene.add(bluePlot1);
+
+    const bluePlot2 = new THREE.Mesh(redPlotGeo.clone(), bluePlotMat.clone());
+    bluePlot2.position.set(...plotPositions.bluePlot2);
+    scene.add(bluePlot2);
+
+    const bluePlot3 = new THREE.Mesh(redPlotGeo.clone(), bluePlotMat.clone());
+    bluePlot3.position.set(...plotPositions.bluePlot3);
+    scene.add(bluePlot3);
+    bluePlot1.add(createLabel("Blue Plot 1"));
+    bluePlot2.add(createLabel("Blue Plot 2"));
+    bluePlot3.add(createLabel("Blue Plot 3"));
+
+
+    //watering zone
+    const waterZoneGeo = new THREE.CircleGeometry(0.1, 32);
+    const waterZoneMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.5 });
+    const waterZone = new THREE.Mesh(waterZoneGeo, waterZoneMat);
+    waterZone.position.set(...plotPositions.wateringZone);
+    waterZone.rotation.x = -Math.PI / 2;
+    scene.add(waterZone);
+    const waterLabel = createLabel("Watering Zone");
+    waterLabel.position.set(0, 0.1, 0);
+    waterZone.add(waterLabel);
+
+
+    //astronaut zone
+    const astronautGeo = new THREE.CircleGeometry(0.1, 32);
+    const astronautMat = new THREE.MeshBasicMaterial({ color: 0x389931, transparent: true, opacity: 0.5 });
+    const astronautZone = new THREE.Mesh(astronautGeo, astronautMat);
+    astronautZone.position.set(...plotPositions.astronaut);
+    astronautZone.rotation.x = -Math.PI / 2;
+    scene.add(astronautZone);
+    const astronautLabel = createLabel("Astronaut Zone");
+    astronautLabel.position.set(0, 0.1, 0);
+    astronautZone.add(astronautLabel);
+
+    //red and blue home
+    const homeGeo = new THREE.CircleGeometry(0.1, 32);
+    const redHomeMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 });
+    const redHomeCircle = new THREE.Mesh(homeGeo.clone(), redHomeMat);
+    redHomeCircle.position.set(...plotPositions.redHome);
+    redHomeCircle.rotation.x = -Math.PI / 2;  // lie flat
+    scene.add(redHomeCircle);
+    const redHomeLabel = createLabel("Red Home");
+    redHomeLabel.position.set(0, 0.1, 0);
+    redHomeCircle.add(redHomeLabel);
+
+    const blueHomeMat = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 });
+    const blueHomeCircle = new THREE.Mesh(homeGeo.clone(), blueHomeMat);
+    blueHomeCircle.position.set(...plotPositions.blueHome);
+    blueHomeCircle.rotation.x = -Math.PI / 2;
+    scene.add(blueHomeCircle);
+    const blueHomeLabel = createLabel("Blue Home");
+    blueHomeLabel.position.set(0, 0.1, 0);
+    blueHomeCircle.add(blueHomeLabel);
+
+    const floor = new THREE.GridHelper(2, 10);
+    scene.add(floor);
+
+    camera.position.set(1.5, 1.5, 1.5);
+    camera.lookAt(0, 0.5, 0);
+
+    let redVelocity = new THREE.Vector3();
+    let blueVelocity = new THREE.Vector3();
+    const redWobblePhase = Math.random() * Math.PI * 2;
+    const blueWobblePhase = Math.random() * Math.PI * 2;
+
+
+    // Spring-damper model with wobble
+    const k = 0.015; // spring stiffness
+    const c = 0.35; // damping (resistance)
+
+    function applyPhysics(robot, target, velocity, phase) {
+      if (!target) return false;
+
+      const displacement = target.clone().sub(robot.position);
+      const distance = displacement.length();
+
+      if (distance < 0.018 && velocity.length() < 0.03) {
+        robot.position.copy(target);
+        velocity.set(0, 0, 0);
+        return false;
+      }
+
+      // Wobble when close to target
+      const time = performance.now() * 0.005;
+      const wobble = distance < 0.15
+        ? new THREE.Vector3(
+          Math.sin(time + phase) * 0.0005,
+          Math.cos(time * 1.2 + phase) * 0.0005,
+          Math.sin(time * 0.8 + phase) * 0.0005
+        )
+        : new THREE.Vector3(0, 0, 0);
+      const springForce = displacement.multiplyScalar(k);
+      const dampingForce = velocity.clone().multiplyScalar(-c);
+      const totalForce = springForce.add(dampingForce).add(wobble);
+
+      velocity.add(totalForce);
+      robot.position.add(velocity);
+
+      return true; // still moving
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      TWEEN.update();
+
+      // Apply spring-damper physics to red and blue
+      if (redMoving && redTarget) {
+        redMoving = applyPhysics(redRobot, redTarget, redVelocity, redWobblePhase);
+      }
+
+      if (blueMoving && blueTarget) {
+        blueMoving = applyPhysics(blueRobot, blueTarget, blueVelocity, blueWobblePhase);
+      }
+
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+    }
+    maybeStart();
+  </script>
+</body>
+
+</html>
